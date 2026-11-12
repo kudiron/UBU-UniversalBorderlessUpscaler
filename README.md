@@ -6,7 +6,7 @@
 
 *Turns windowed games and apps into true borderless fullscreen, with lightweight GPU upscaling and sharpening.*
 
-[![Version](https://img.shields.io/badge/version-1.0-blue?style=flat-square)](../../releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](../../releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows)](#sistem-gereksinimleri)
 [![DirectX](https://img.shields.io/badge/DirectX-11-107C10?style=flat-square)](#sistem-gereksinimleri)
