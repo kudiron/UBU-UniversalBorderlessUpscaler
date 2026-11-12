@@ -66,8 +66,8 @@ istediğiniz klasöre koyup çalıştırmanız yeterlidir.
 **Gereksinimler:** CMake ≥ 3.20, Visual Studio 2019/2022/2026 (C++ Masaüstü Geliştirme iş yükü) veya MSVC Build Tools, Windows 10/11 SDK.
 
 ```bat
-git clone https://github.com/<kullanici-adiniz>/UniversalBorderlessUpscaler.git
-cd UniversalBorderlessUpscaler
+git clone https://github.com
+cd UBU-UniversalBorderlessUpscaler
 
 cmake -S . -B build -G "Visual Studio 18 2026" -A x64
 cmake --build build --config Release
@@ -165,8 +165,8 @@ system tray.
 ### Build from Source
 
 ```bat
-git clone https://github.com/<your-username>/UniversalBorderlessUpscaler.git
-cd UniversalBorderlessUpscaler
+git clone https://github.com
+cd UBU-UniversalBorderlessUpscaler
 
 cmake -S . -B build -G "Visual Studio 18 2026" -A x64
 cmake --build build --config Release
