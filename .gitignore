@@ -1,0 +1,61 @@
+# ---- Build output -----------------------------------------------------------
+build/
+out/
+bin/
+obj/
+x64/
+Release/
+Debug/
+RelWithDebInfo/
+MinSizeRel/
+
+# ---- CMake generated --------------------------------------------------------
+CMakeCache.txt
+CMakeFiles/
+CMakeUserPresets.json
+CMakeConfigureLog.yaml
+cmake_install.cmake
+CTestTestfile.cmake
+install_manifest.txt
+Makefile
+*.sln
+*.slnx
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+ALL_BUILD/
+ZERO_CHECK/
+
+# ---- Compiled binaries / intermediates --------------------------------------
+*.exe
+*.dll
+*.lib
+*.exp
+*.ilk
+*.obj
+*.pdb
+*.idb
+*.map
+*.res
+*.tlog
+*.log
+*.iobj
+*.ipdb
+
+# ---- Visual Studio / IDE ----------------------------------------------------
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.opendb
+
+# ---- Misc -------------------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+*.tmp
+*~
