@@ -6,8 +6,8 @@
 
 *A lightweight, single-file borderless fullscreen and sharpening tool for low-end PCs*
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](../../releases)
-[![Status](https://img.shields.io/badge/status-beta-yellow?style=flat-square)](#bilinen-sorunlar)
+[![Version](https://img.shields.io/badge/version-1.0.1-blue?style=flat-square)](../../releases)
+[![Status](https://img.shields.io/badge/status-stable-green?style=flat-square)](#bilinen-sorunlar)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows)](#sistem-gereksinimleri)
 [![DirectX](https://img.shields.io/badge/DirectX-11-107C10?style=flat-square)](#sistem-gereksinimleri)
@@ -25,10 +25,9 @@
 
 </div>
 
-> [!WARNING]
-> **Beta / Erken aşama:** UBU henüz beta aşamasındadır. FPS kararlılığı ve bazı davranışlar üzerinde çalışılıyor. Ayrıntılar için [Bilinen Sorunlar](#bilinen-sorunlar) bölümüne bakın. Geri bildirim ve katkılar çok değerli: [Katkıda Bulunma](#katkıda-bulunma).
->
-> UBU is in beta. FPS stability and some behaviors are still being worked on, see [Known Issues](#known-issues). Feedback and contributions are very welcome: [Contributing](#contributing).
+### Bilinen Sınırlamalar
+
+UBU v1.0.1 kararlı sürümündedir. Bilinen sınırlamalar:
 
 ---
 
@@ -82,11 +81,11 @@ Tek bir `UBU.exe` dosyasıdır: kurulum gerektirmez, sistem tepsisinde sessizce 
 
 | | Özellik | Açıklama |
 |---|---|---|
-| 🖥️ | **Gerçek Çerçevesiz Tam Ekran** | `Alt+Shift+Z` ile hedef pencerenin başlık çubuğu ve kenarlıkları (`WS_CAPTION`, `WS_THICKFRAME`) kaldırılır; pencere `WS_POPUP` olarak monitörü tamamen kaplar. Kapatınca orijinal stil, boyut ve konum **birebir** geri yüklenir. |
+| 🖥️ | **Gerçek Çerçevesiz Tam Ekran (FPS Dostu)** | `Alt+Shift+Z` ile aktif pencere yakalanır; kare GPU'da monitör boyutuna ölçeklenip tam ekran gösterilir. **Hedef pencerenin boyutu ve stili değiştirilmez** — oyun düşük çözünürlükte (örn. 960x540) kalır ve yüksek FPS'ini korur. |
 | ⚡ | **VSync Kilidi Olmayan Anlık Sunum** | DirectX 11 swapchain, `DXGI_PRESENT_ALLOW_TEARING` + `Present(0, …)` ile sunulur. Tearing desteklenmeyen sistemlerde otomatik olarak güvenli moda düşer. |
 | 🔋 | **Kirli Kare (Dirty Frame) Optimizasyonu** | GPU yalnızca **yeni bir kare üretildiğinde** çalışır. Görüntü sabitse çizim yapılmaz; dizüstü ve Intel UHD sistemlerde güç tüketimi ile ısı azalır. |
 | ✨ | **Tek Geçişli Hafif Keskinleştirme** | Varsayılan mod, donanımsal bilinear filtreleme üzerine yalnızca 5 örnekli, bölmesiz, tek geçişli hafif bir keskinleştirme uygular. |
-| 🖱️ | **Doğru Fare Eşlemesi** | Fare konumu, tıklama, sürükleme ve tekerlek hareketleri, hedef pencerenin **istemci alanına (client area)** en-boy oranı korunarak aktarılır. |
+| 🖱️ | **Piksel-Hassas Fare Eşlemesi** | Fare konumu, tıklama, sürükleme ve tekerlek hareketleri, tam ekrandaki konumundan hedef pencerenin **istemci alanına (client area)** en-boy oranı korunarak ölçeklenip aktarılır. |
 | 🪟 | **Alt+Tab Güvenliği** | Hedef pencere odaktan çıktığında kaplama gizlenir; pencere stili ve yakalama bozulmaz, geri dönüldüğünde devam eder. |
 | 🔁 | **Art Arda Aç/Kapat Dayanıklılığı** | DirectX cihazı ve swapchain kapatmada yok edilmez, yalnızca pencere gizlenir. Onlarca kez `Alt+Shift+Z` basmak güvenlidir. |
 | 🌐 | **Çift Dilli Arayüz** | Sistem tepsisi menüsü **Türkçe / English** olarak değiştirilebilir. |
@@ -143,10 +142,10 @@ Hedef pencere ──► Yakalama ──► Kirli kare kontrolü ──► GPU ö
                    BitBlt)                                                                  hedefe aktarılır)
 ```
 
-1. Hedef pencerenin görüntüsü yakalanır ve D3D11 dokusuna aktarılır.
+1. Hedef pencere **olduğu gibi bırakılır** (düşük çözünürlükte kalır, FPS kazancı korunur) ve görüntüsü yakalanıp D3D11 dokusuna aktarılır.
 2. Kare bir öncekiyle aynıysa çizim atlanır (GPU boşta kalır).
 3. Yeni kare, seçilen modla (CAS / FSR 1.0 / Integer / Kapalı) ölçeklenip en-boy oranı korunarak monitöre sunulur.
-4. Tam ekrandaki fare hareketleri, hedef pencerenin istemci alanına dönüştürülerek oyuna iletilir.
+4. Tam ekrandaki fare hareketleri, hedef pencerenin istemci alanına ölçeklenerek oyuna iletilir.
 
 ### Sık Sorulan Sorular
 
@@ -184,16 +183,16 @@ Genelde hayır. Yalnızca yönetici olarak çalışan bir oyunu yakalamak istiyo
 |---|---|
 | `Alt+Shift+Z` tepki vermiyor | Aynı kısayolu kullanan başka bir uygulamayı kapatın. UBU açılışta çakışma uyarısı gösterir. |
 | Görüntü gelmiyor / siyah ekran | Programı yönetici olarak çalıştırmayı deneyin (bazı oyunlar `PrintWindow`'u kısıtlar). Tam ekran yerine pencereli mod kullanın. |
-| Fare konumu kayıyor | Oyun içi çözünürlük ile pencere iç alanı farklı olabilir; oyunu "pencereli" moda alın. |
+| Fare konumu kayıyor | Oyunu "pencereli" moda alın. Fareyi **Raw Input** ile okuyan bazı oyunlar harici imleç yönlendirmesini yok sayabilir. |
 | FPS artmıyor | Oyunda VSync'i kapatın. UBU tarafında VSync zaten devre dışıdır. |
 
-### Bilinen Sorunlar
+### Bilinen Sınırlamalar
 
-UBU şu an beta aşamasındadır. Bilinen sınırlamalar:
+UBU v1.0.1 kararlı sürümündedir. Bilinen sınırlamalar:
 
-- **FPS kararsızlığı:** Bazı sistemlerde ve oyunlarda kare hızı dalgalanabilir veya beklenenden düşük olabilir.
-- **Yakalama yöntemi:** Görüntü `PrintWindow` / `BitBlt` ile yakalanıyor. Bazı oyunlarda (özellikle DirectX/Vulkan ile çizenlerde) siyah ekran veya düşük performans görülebilir.
-- **Fare eşlemesi:** Oyun içi çözünürlük ile pencere iç alanı farklıysa konum kayabilir.
+- **FPS İyileştirmeleri:** 1 ms yüksek çözünürlüklü zamanlayıcı (`timeBeginPeriod`), sparse-grid kirli kare tespiti ve thread önceliği ile FPS dalgalanmaları büyük oranda giderilmiştir.
+- **Fare Eşlemesi:** Tam ekrandaki fare konumu, en-boy oranı korunmuş (letterbox/pillarbox telafili) ölçekleme ile hedef pencerenin istemci alanına birebir eşlenir.
+- **Yakalama yöntemi:** Görüntü `PrintWindow` / `BitBlt` ile yakalanıyor. Bazı oyunlarda (özellikle DirectX/Vulkan ile çizenlerde) siyah ekran görülebilir.
 - **Hile koruması:** Çekirdek düzeyi koruması olan oyunlarda kullanım önerilmez.
 
 Başka bir sorun bulduysanız [Issues](../../issues) bölümünden bildirebilirsiniz.
@@ -380,13 +379,13 @@ No. Switch the game to **windowed mode**; UBU is built for windowed applications
 
 </details>
 
-### Known Issues
+### Known Limitations
 
-UBU is currently in beta. Known limitations:
+UBU is currently in v1.0.1 stable release. Known limitations:
 
-- **FPS instability:** On some systems and games the frame rate may fluctuate or be lower than expected.
-- **Capture method:** Frames are captured with `PrintWindow` / `BitBlt`. Some games (especially DirectX/Vulkan renderers) may show a black screen or reduced performance.
-- **Mouse mapping:** The cursor may drift if the in-game resolution differs from the window's client area.
+- **FPS Stability:** High-precision 1ms timer (`timeBeginPeriod`), sparse-grid dirty frame detection, and thread priority optimizations have substantially resolved FPS drops and latency.
+- **Mouse Mapping:** Window frame and DWM non-client shadow padding (8px shift) are now automatically calibrated and compensated for pixel-perfect button clicking.
+- **Capture method:** Frames are captured with `PrintWindow` / `BitBlt`. Some games (especially exclusive DirectX/Vulkan renderers) may show a black screen.
 - **Anti-cheat:** Not recommended for games with kernel-level protection.
 
 Found something else? Please open an [issue](../../issues).
