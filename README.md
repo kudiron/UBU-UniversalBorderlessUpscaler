@@ -17,7 +17,7 @@
 
 <!-- Buraya demo GIF'i veya ekran görüntüsü ekleyin (en etkili iyileştirme):
      Add a demo GIF or screenshot here (the single most effective improvement):
-<img src="docs/demo.gif" alt="UBU demo" width="720">
+<img src="before-after.png" alt="UBU kapalı ve açık karşılaştırması" width="900">
 -->
 
 </div>
@@ -163,7 +163,7 @@ Genelde hayır. Yalnızca yönetici olarak çalışan bir oyunu yakalamak istiyo
 | `Alt+Shift+Z` tepki vermiyor | Aynı kısayolu kullanan başka bir uygulamayı kapatın. UBU açılışta çakışma uyarısı gösterir. |
 | Görüntü gelmiyor / siyah ekran | Programı yönetici olarak çalıştırmayı deneyin (bazı oyunlar `PrintWindow`'u kısıtlar). Tam ekran yerine pencereli mod kullanın. |
 | Fare konumu kayıyor | Oyunu pencereli moda alın. Fareyi **Raw Input** ile okuyan bazı oyunlar harici imleç yönlendirmesini yok sayabilir. |
-| FPS artmıyor | Oyunda VSync'i kapatın. UBU tarafında VSync zaten devre dışıdır. |
+| FPS düşüyor veya dalgalanıyor | `Alt+Shift+1` (CAS) ya da `Alt+Shift+0` (Kapalı) moduna geçin; FSR 1.0 daha fazla GPU gücü kullanır. Oyunda VSync'i kapatın. |
 
 ### Bilinen Sınırlamalar
 
@@ -171,6 +171,7 @@ UBU şu anda **v1.0.1 (kararlı)** sürümündedir.
 
 - **Yakalama yöntemi.** Görüntü `PrintWindow` / `BitBlt` ile yakalanır. Bazı oyunlarda (özellikle DirectX/Vulkan ile çizenlerde) siyah ekran görülebilir.
 - **Hile koruması.** Çekirdek düzeyi koruması olan oyunlarda kullanım önerilmez.
+- **FPS.** Yakalama ve ölçekleme işlemi küçük FPS düşüşlerine veya dalgalanmalarına yol açabilir; etkisi oyuna, GPU'ya ve seçilen moda (en hafifi Kapalı/CAS, en ağırı FSR 1.0) göre değişir. Bu konu üzerinde çalışılıyor, bkz. [Yol Haritası](#yol-haritası).
 
 Başka bir sorun bulduysanız [Issues](../../issues) bölümünden bildirebilirsiniz.
 
@@ -393,7 +394,7 @@ Usually not. You may need to if the game you want to capture is itself running a
 | `Alt+Shift+Z` does nothing | Close any other application that uses the same shortcut. UBU shows a conflict warning on startup. |
 | Black screen / no image | Try running UBU as administrator (some games restrict `PrintWindow`). Use windowed mode instead of fullscreen. |
 | Mouse position drifts | Switch the game to windowed mode. Games that read the mouse via **Raw Input** may ignore external cursor redirection. |
-| FPS does not improve | Disable VSync in the game. VSync is already disabled on UBU's side. |
+| FPS drops or fluctuates | Switch to `Alt+Shift+1` (CAS) or `Alt+Shift+0` (Off); FSR 1.0 uses more GPU. Disable VSync in the game. |
 
 ### Known Limitations
 
@@ -401,6 +402,7 @@ UBU is currently at **v1.0.1 (stable)**.
 
 - **Capture method.** Frames are captured with `PrintWindow` / `BitBlt`. Some games, especially DirectX/Vulkan renderers, may show a black screen.
 - **Anti-cheat.** Not recommended for games with kernel-level protection.
+- **FPS.** Capturing and scaling the window can cause small FPS drops or fluctuations. The impact depends on the game, the GPU and the selected mode (lightest: Off/CAS, heaviest: FSR 1.0). This is being worked on, see the [Roadmap](#roadmap-1).
 
 Found something else? Please open an [issue](../../issues).
 
