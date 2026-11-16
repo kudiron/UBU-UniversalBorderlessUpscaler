@@ -126,7 +126,7 @@ Tek bir `UBU.exe` dosyasıdır: kurulum gerektirmez, sistem tepsisinde sessizce 
 
 Kurulum gerekmez. [Releases](../../releases/latest) bölümünden `UBU.exe` dosyasını indirip istediğiniz klasörden çalıştırmanız yeterlidir.
 
-> [!NOTE]
+> [!NOT]
 > UBU tek kopya (single-instance) olarak çalışır. İkinci kez başlatılırsa uyarı verir ve kapanır.
 
 **Doğrulama:** İndirdiğiniz dosyanın SHA256 değerini Releases sayfasındaki asset satırında görebilirsiniz. PowerShell ile kontrol etmek için:
