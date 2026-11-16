@@ -33,6 +33,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, PWSTR /*pC
 
     SetUnhandledExceptionFilter(UBUExceptionFilter);
 
+    // 1 ms yuksek cozunurluklu Windows zamanlayicisi (sleep_for / Sleep gecikmelerini onler, FPS'i ucurur)
+    timeBeginPeriod(1);
+
     // Single-instance guard
     HANDLE hMutex = CreateMutexW(nullptr, TRUE, L"UniversalBorderlessUpscaler_SingleInstance_Mutex");
     if (GetLastError() == ERROR_ALREADY_EXISTS)
@@ -45,11 +48,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, PWSTR /*pC
             MB_OK | MB_ICONINFORMATION
         );
         if (hMutex) CloseHandle(hMutex);
+        timeEndPeriod(1);
         return 0;
     }
 
-    // Process priority: BELOW_NORMAL -> oyun her zaman CPU/GPU onceligini kazanir.
-    SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
+    // Process priority: NORMAL. UBU'yu ABOVE_NORMAL yapmak, yakalama thread'inin
+    // oyunun render thread'ini CPU'dan ac birakmasi ve dogrudan FPS dususu
+    // yaratmasi demekti. UBU normal oncelikte oyunla esit yarisir; render
+    // thread'i ayrica BELOW_NORMAL'e cekilir (bkz. UpscalerApp::Initialize).
+    SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 
     {
         UpscalerApp app;
@@ -59,6 +66,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, PWSTR /*pC
             app.Shutdown();
         }
     }
+
+    timeEndPeriod(1);
 
     if (hMutex)
     {

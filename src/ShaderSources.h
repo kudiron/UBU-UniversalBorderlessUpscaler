@@ -139,4 +139,39 @@ float4 PS_Integer(VSOutput input) : SV_TARGET
     return float4(color, 1.0);
 }
 )hlsl";
+
+    // ---------------------------------------------------------------------
+    // Sentetik fare imleci shader'lari.
+    // Ayri bir kucuk D3D11 cizimi icin kullanilir. HER ZAMAN bu gomulu
+    // kaynaktan derlenir (dosya bagimliligi yoktur).
+    // ---------------------------------------------------------------------
+    constexpr const char* CursorHLSL = R"hlsl(
+struct CursorVSIn
+{
+    float2 pos : POSITION;
+    float2 uv  : TEXCOORD0;
+};
+
+struct CursorVSOut
+{
+    float4 pos : SV_POSITION;
+    float2 uv  : TEXCOORD0;
+};
+
+CursorVSOut CursorVS(CursorVSIn input)
+{
+    CursorVSOut o;
+    o.pos = float4(input.pos, 0.0f, 1.0f);
+    o.uv  = input.uv;
+    return o;
+}
+
+Texture2D    g_CursorTexture : register(t0);
+SamplerState g_CursorSampler : register(s0);
+
+float4 CursorPS(CursorVSOut input) : SV_TARGET
+{
+    return g_CursorTexture.Sample(g_CursorSampler, input.uv);
+}
+)hlsl";
 }

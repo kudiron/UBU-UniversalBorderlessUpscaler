@@ -77,8 +77,15 @@ bool UpscalerApp::Initialize(HINSTANCE hInstance)
     RegisterHotkeys();
     InitTrayIcon();
 
+    m_wakeEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+    m_overlayWindow.SetWakeEvent(m_wakeEvent);
+
     m_isRunning = true;
     m_renderThread = std::thread(&UpscalerApp::RenderLoop, this);
+    // Render thread uyku aralarinda QPC + event ile bekledigi icin NORMAL
+    // oncelikte calisir; bu sayede yazilimsal fare imleci zamanlayici
+    // gecikmesine (15 ms scheduler beklemesi) takilmaz.
+    SetThreadPriority((HANDLE)m_renderThread.native_handle(), THREAD_PRIORITY_NORMAL);
 
     return true;
 }
@@ -96,30 +103,27 @@ void UpscalerApp::Run()
 void UpscalerApp::Shutdown()
 {
     m_isRunning = false;
+    m_overlayWindow.SetWakeEvent(nullptr);
+    if (m_wakeEvent) SetEvent(m_wakeEvent);
 
     if (m_renderThread.joinable())
         m_renderThread.join();
+
+    if (m_wakeEvent)
+    {
+        CloseHandle(m_wakeEvent);
+        m_wakeEvent = nullptr;
+    }
 
     {
         std::lock_guard<std::mutex> lock(m_toggleMutex);
         if (m_isActive.exchange(false))
         {
+            if (m_overlayWindow.GetHwnd())
+                ReleaseCapture();
             m_overlayWindow.SetTargetWindow(nullptr);
             m_overlayWindow.Show(false);
             m_captureMgr.StopCapture();
-
-            HWND target = m_targetHwnd.load();
-            if (m_windowTransformed.load() && target && IsWindow(target))
-            {
-                SetWindowLongPtrW(target, GWL_STYLE,   m_origStyle);
-                SetWindowLongPtrW(target, GWL_EXSTYLE, m_origExStyle);
-                SetWindowPos(target, HWND_NOTOPMOST,
-                    m_origWindowRect.left, m_origWindowRect.top,
-                    m_origWindowRect.right  - m_origWindowRect.left,
-                    m_origWindowRect.bottom - m_origWindowRect.top,
-                    SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-            }
-            m_windowTransformed.store(false);
             m_targetHwnd.store(nullptr);
         }
     }
@@ -193,7 +197,7 @@ bool UpscalerApp::InitTrayIcon()
     m_nid.uFlags          = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     m_nid.uCallbackMessage = WM_TRAYICON;
     m_nid.hIcon           = LoadIcon(nullptr, IDI_APPLICATION);
-    wcscpy_s(m_nid.szTip, L"Universal Borderless Upscaler (UBU) v1.0\nAlt+Shift+Z: Fullscreen | Right-click: Menu");
+    wcscpy_s(m_nid.szTip, L"Universal Borderless Upscaler (UBU) v1.0.1\nAlt+Shift+Z: Fullscreen | Right-click: Menu");
     return Shell_NotifyIconW(NIM_ADD, &m_nid) != FALSE;
 }
 
@@ -279,14 +283,14 @@ void UpscalerApp::ShowShortcutsInfo()
     const bool en = m_english.load();
 
     std::wstring info = en
-        ? L"Universal Borderless Upscaler (UBU) v1.0\n\n"
+        ? L"Universal Borderless Upscaler (UBU) v1.0.1\n\n"
           L"Shortcuts:\n"
           L"  Alt + Shift + Z : Borderless Fullscreen On / Off\n"
           L"  Alt + Shift + 1 : CAS (Light & Balanced - Recommended)\n"
           L"  Alt + Shift + 2 : FSR 1.0 (EASU + RCAS)\n"
           L"  Alt + Shift + 3 : Integer Scaling (Retro / 2D)\n"
           L"  Alt + Shift + 0 : Sharpening Off (Hardware Bilinear)\n\n"
-        : L"Universal Borderless Upscaler (UBU) v1.0\n\n"
+        : L"Universal Borderless Upscaler (UBU) v1.0.1\n\n"
           L"Kisayollar:\n"
           L"  Alt + Shift + Z : Kenarliksiz Tam Ekran Ac / Kapat\n"
           L"  Alt + Shift + 1 : CAS (Hafif ve Dengeli - Onerilen)\n"
@@ -334,6 +338,25 @@ static bool IsShellWindow(HWND hwnd)
         || (wcscmp(cls, L"Shell_SecondaryTrayWnd") == 0)
         || (wcscmp(cls, L"Progman") == 0)
         || (wcscmp(cls, L"WorkerW") == 0);
+}
+
+// Monitorun GERCEK tazeleme hizini (Hz) dondurur. Sunum hizini buna sinirlamak
+// icin kullanilir: ekranda gosterilemeyecek kadar hizli kare uretmek, oyundan
+// CPU/GPU calarak FPS'i dusurur.
+static int GetMonitorRefreshHz(HMONITOR hMon)
+{
+    MONITORINFOEXW mi = {};
+    mi.cbSize = sizeof(MONITORINFOEXW);
+    if (!GetMonitorInfoW(hMon, &mi)) return 60;
+
+    DEVMODEW dm = {};
+    dm.dmSize = sizeof(DEVMODEW);
+    if (EnumDisplaySettingsW(mi.szDevice, ENUM_CURRENT_SETTINGS, &dm) &&
+        dm.dmDisplayFrequency > 1)
+    {
+        return (int)dm.dmDisplayFrequency;
+    }
+    return 60;
 }
 
 void UpscalerApp::ToggleUpscaling()
@@ -392,18 +415,25 @@ bool UpscalerApp::StartUpscaling(HWND targetHwnd)
     if (targetHwnd == m_overlayWindow.GetHwnd() || targetHwnd == m_hiddenHwnd)
         return false;
 
-    // Orijinal stil/konum bilgisi, kapatirken birebir geri yuklemek icin saklanir.
-    const LONG origStyle   = (LONG)(LONG_PTR)GetWindowLongPtrW(targetHwnd, GWL_STYLE);
-    const LONG origExStyle = (LONG)(LONG_PTR)GetWindowLongPtrW(targetHwnd, GWL_EXSTYLE);
-    RECT origRect = {};
-    GetWindowRect(targetHwnd, &origRect);
-
     HMONITOR   hMon = MonitorFromWindow(targetHwnd, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi  = { sizeof(MONITORINFO) };
     if (!GetMonitorInfoW(hMon, &mi)) return false;
 
     const int monW = mi.rcMonitor.right  - mi.rcMonitor.left;
     const int monH = mi.rcMonitor.bottom - mi.rcMonitor.top;
+
+    // --- FPS koruma: sunum hizi siniri ---
+    // Monitorun tazeleme hizindan daha sik kare yakalayip olceklendirmek,
+    // ekranda zaten gosterilemeyecek kareler icin CPU/GPU harcamak demektir;
+    // bu da dogrudan oyunun FPS'inden calar. Bu yuzden UBU en fazla monitor
+    // tazeleme hizi kadar is yapar.
+    {
+        LARGE_INTEGER qpf = {};
+        QueryPerformanceFrequency(&qpf);
+        const int refreshHz = std::max(1, GetMonitorRefreshHz(hMon));
+        m_intervalTicks = std::max<long long>(1LL, qpf.QuadPart / (long long)refreshHz);
+        m_lastPresentTicks = 0;  // ilk kare hemen sunulsun
+    }
 
     // --- Overlay + renderer hazirla (tum D3D erisimi m_renderMutex altinda) ---
     {
@@ -437,36 +467,21 @@ bool UpscalerApp::StartUpscaling(HWND targetHwnd)
         m_renderer.InvalidateTextureCache();
     }
 
-    // --- Pencereyi gercek cercevesiz tam ekran yap: WS_POPUP + tam monitor boyutu ---
-    LONG newStyle = origStyle;
-    newStyle &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU | WS_BORDER | WS_DLGFRAME);
-    newStyle |= WS_POPUP;
-    SetWindowLongPtrW(targetHwnd, GWL_STYLE, newStyle);
+    // -------------------------------------------------------------------------
+    // KRITIK / FPS: HEDEF PENCEREYE HIC DOKUNULMAZ.
+    // Oyun pencereyi duser cozunurlukte (or. 960x540) BIRAKIR ve o cozunurlukte
+    // render etmeye devam eder. Pencereyi monitor boyutuna buyutmek oyunu
+    // 1366x768 render etmeye zorlar; bu hem upscale amacini bozar hem de FPS
+    // kazancini yok eder: pencere monitoru kaplayinca DWM vsync uygular ve
+    // oyunun FPS'i, dusuk cozunurlukteki yuksek degerinden ekran tazeleme
+    // hizina duser. UBU bunun yerine pencereyi oldugu gibi birakir, kareyi
+    // yakalar ve overlay uzerinde tam ekrana olcekler.
+    // -------------------------------------------------------------------------
 
-    // Cercere kaldirildigi icin istemci alani tam monitor olmali: kenarliksiz
-    // pencere icin istenen DIS boyut = monitor boyutu.
-    SetWindowPos(targetHwnd, HWND_NOTOPMOST,
-        mi.rcMonitor.left, mi.rcMonitor.top, monW, monH,
-        SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-
-    // Stil degisikligini kalici hale getir, sonra basariyla devam et.
-    m_origStyle        = origStyle;
-    m_origExStyle      = origExStyle;
-    m_origWindowRect   = origRect;
-    m_windowTransformed.store(true);
+    SetForegroundWindow(targetHwnd);
 
     if (!m_captureMgr.StartCapture(targetHwnd, m_renderer.GetDevice()))
-    {
-        SetWindowLongPtrW(targetHwnd, GWL_STYLE,   m_origStyle);
-        SetWindowLongPtrW(targetHwnd, GWL_EXSTYLE, m_origExStyle);
-        SetWindowPos(targetHwnd, HWND_NOTOPMOST,
-            m_origWindowRect.left, m_origWindowRect.top,
-            m_origWindowRect.right  - m_origWindowRect.left,
-            m_origWindowRect.bottom - m_origWindowRect.top,
-            SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-        m_windowTransformed.store(false);
         return false;
-    }
 
     m_overlayWindow.SetTargetWindow(targetHwnd);
     m_overlayWindow.Show(true);
@@ -482,7 +497,10 @@ void UpscalerApp::StopUpscaling()
 {
     if (!m_isActive.exchange(false)) return;
 
-    // 1) Overlay'i gizle ve hedefi birak (artik fare/kare iletilmez).
+    // 1) Overlay fare yakalamayi birakabilir (surukleme sirasinda SetCapture
+    //    cagrilmis olabilir) ve gizlenir.
+    if (m_overlayWindow.GetHwnd())
+        ReleaseCapture();
     m_overlayWindow.SetTargetWindow(nullptr);
     m_overlayWindow.Show(false);
 
@@ -495,19 +513,7 @@ void UpscalerApp::StopUpscaling()
     // 3) Yakalamayi durdur (render thread artik RenderFrame cagirmiyor).
     m_captureMgr.StopCapture();
 
-    // 4) Hedef pencerenin orijinal stilini/konumunu geri yukle.
-    HWND target = m_targetHwnd.load();
-    if (m_windowTransformed.load() && target && IsWindow(target))
-    {
-        SetWindowLongPtrW(target, GWL_STYLE,   m_origStyle);
-        SetWindowLongPtrW(target, GWL_EXSTYLE, m_origExStyle);
-        SetWindowPos(target, HWND_NOTOPMOST,
-            m_origWindowRect.left, m_origWindowRect.top,
-            m_origWindowRect.right  - m_origWindowRect.left,
-            m_origWindowRect.bottom - m_origWindowRect.top,
-            SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-    }
-    m_windowTransformed.store(false);
+    // 4) Hedef pencereye HIC DOKUNULMADIGI icin geri yuklenecek bir sey yok.
     m_targetHwnd.store(nullptr);
 }
 
@@ -515,10 +521,15 @@ void UpscalerApp::StopUpscaling()
 
 void UpscalerApp::RenderLoop()
 {
-    // Yoklama periyodu. Oyun kare urettikce 1 ms (maksimum FPS / en dusuk
-    // gecikme), goruntu sabit kaldikca kademeli olarak 8 ms'ye cikar. Boylece
-    // bos ekranda BOS SPIN yapilmaz ve islemci/bellek yolu bosuna mesgul edilmez.
-    int idlePollMs = 1;
+    // SABIT KADANS: Degerli degisken yoklama periyodu KALDIRILDI. Dongu artik
+    // her turda monitor tazeleme periyoduna kadar tek seferde uyur; boylece
+    // uyanma sayisi minimumda kalir ve CPU yuku saniyeler arasinda DALGALANMAZ.
+
+    // Sentetik imlec durumu (yalnizca bu thread okur/yazar). Imlec hareket
+    // ettiginde kare tazelenir; boylece imlec goruntudeki yerinde gorunur.
+    bool lastCursorActive = false;
+    int  lastCursorX = 0;
+    int  lastCursorY = 0;
 
     while (m_isRunning.load())
     {
@@ -549,7 +560,10 @@ void UpscalerApp::RenderLoop()
         // overlay gizlenir ama yakalama/stil DEGISTIRILMEZ: geri donuste aninda
         // devam edilir. Bu, Alt+Tab kaynakli cokmeleri de onler.
         HWND fg = GetForegroundWindow();
-        const bool targetFocused = (fg == target || fg == m_overlayWindow.GetHwnd());
+        HWND rootFg = fg ? GetAncestor(fg, GA_ROOT) : nullptr;
+        HWND ownerFg = fg ? (HWND)(LONG_PTR)GetWindowLongPtrW(fg, GWLP_HWNDPARENT) : nullptr;
+        const bool targetFocused = (fg == target || fg == m_overlayWindow.GetHwnd() ||
+                                    rootFg == target || ownerFg == target);
         if (!targetFocused)
         {
             m_overlayWindow.Show(false);
@@ -560,7 +574,53 @@ void UpscalerApp::RenderLoop()
         if (!m_overlayWindow.IsVisible())
             m_overlayWindow.Show(true);
 
+        // --- Fare imleci ----------------------------------------------------
+        // Imlec hareket ettiginde kilitli kadans uykusunu beklemeden aninda
+        // overlay karesi guncellenir; boylece imlec 1:1 akicilik kazanir.
+        const bool curActive = m_overlayWindow.GetCursorActive();
+        const int  curX = m_overlayWindow.GetCursorPixelX();
+        const int  curY = m_overlayWindow.GetCursorPixelY();
+        bool cursorMoved = false;
+        if (curActive != lastCursorActive ||
+            (curActive && (curX != lastCursorX || curY != lastCursorY)))
+        {
+            cursorMoved = true;
+            m_forceRedraw.store(true);
+        }
+        lastCursorActive = curActive;
+        lastCursorX = curX;
+        lastCursorY = curY;
+        m_renderer.SetCursor(curActive, (float)curX, (float)curY);
+
+        // --- GECIKMESIZ IMLEC & FPS KORUMALI KADANS -------------------------
+        LARGE_INTEGER qpcNow = {};
+        QueryPerformanceCounter(&qpcNow);
+
+        if (!cursorMoved && m_intervalTicks > 0 && m_lastPresentTicks > 0)
+        {
+            const long long elapsed = qpcNow.QuadPart - m_lastPresentTicks;
+            if (elapsed < m_intervalTicks)
+            {
+                LARGE_INTEGER qpf = {};
+                QueryPerformanceFrequency(&qpf);
+                const double remainingMs = (double)(m_intervalTicks - elapsed) * 1000.0 / (double)qpf.QuadPart;
+                const DWORD waitMs = (DWORD)std::clamp(remainingMs - 0.5, 0.0, 16.0);
+
+                if (waitMs > 0 && m_wakeEvent)
+                {
+                    WaitForSingleObject(m_wakeEvent, waitMs);
+                }
+                else
+                {
+                    std::this_thread::yield();
+                }
+                continue;
+            }
+        }
+        m_lastPresentTicks = qpcNow.QuadPart;
+
         bool presented = false;
+        bool rebindCapture = false;
 
         {
             std::lock_guard<std::mutex> captureLock(m_captureMgr.GetMutex());
@@ -580,9 +640,12 @@ void UpscalerApp::RenderLoop()
                     m_lastTextureGeneration = gen;
                 }
 
-                // Yakala + hash'le. Yeni kare YOKSA doku guncellenmez; yani
-                // buradan sonra hicbir GPU isi tetiklenmez.
-                ID3D11Texture2D* capturedTex = m_captureMgr.GetLatestTexture();
+                // Yakalama: bu noktaya yalnizca kadans slotu acildiginda
+                // gelindigi icin yeni kare yakalamak GUVENLIDIR.
+                // Sadece zorunlu yeniden cizim (imlec hareketi / mod degisikligi)
+                // varsa yakalama YAPILMAZ; mevcut doku yeniden cizilir. Bu,
+                // fare hareketi sirasinda gereksiz BitBlt maliyetini onler.
+                ID3D11Texture2D* capturedTex = m_captureMgr.GetLatestTexture(true);
 
                 const int srcW = m_captureMgr.GetTextureWidth();
                 const int srcH = m_captureMgr.GetTextureHeight();
@@ -593,8 +656,8 @@ void UpscalerApp::RenderLoop()
                 // Present cagrilarinin HICBIRI yapilmaz.
                 // ------------------------------------------------------------------
                 const bool haveFrame = (capturedTex != nullptr) &&
-                                       (m_captureMgr.HasNewFrame() || forceRedraw) &&
-                                       (srcW > 0 && srcH > 0);
+                                       (srcW > 0 && srcH > 0) &&
+                                       (forceRedraw || m_captureMgr.HasNewFrame());
 
                 if (haveFrame)
                 {
@@ -622,25 +685,35 @@ void UpscalerApp::RenderLoop()
                             monW = rc.right - rc.left;
                             monH = rc.bottom - rc.top;
                         }
-                        if (monW > 0 && monH > 0)
+                        if (monW > 0 && monH > 0 &&
+                            m_renderer.RecoverDevice(m_overlayWindow.GetHwnd(), monW, monH))
                         {
-                            m_renderer.RecoverDevice(m_overlayWindow.GetHwnd(), monW, monH);
                             m_lastTextureGeneration = 0;
                             m_forceRedraw.store(true);
+                            // CaptureManager hala ESKI (artik gecersiz) D3D cihazina
+                            // bagli; kilidi biraktiktan sonra yeni cihazla yeniden kur.
+                            rebindCapture = true;
                         }
                     }
                 }
             }
         }
 
-        // Yeni kare sunulduysa hizli kal (yuksek FPS); gosterilecek yeni bir
-        // sey yoksa kademeli olarak yavasla (CPU ve iGPU'yu bos birak).
-        if (presented)
-            idlePollMs = 1;
-        else
-            idlePollMs = (idlePollMs < 8) ? (idlePollMs + 1) : 8;
+        // Cihaz kurtarildiysa yakalamayi da YENI D3D cihazina bagla.
+        // (Kilidi biraktiktan sonra yapilir: StartCapture yeniden captureMutex alir.)
+        // Aksi halde CaptureManager eski cihazla doku guncellemeye calisip
+        // goruntuyu bozar/gestiremezdi.
+        if (rebindCapture && target && IsWindow(target) && m_renderer.IsReady())
+        {
+            m_captureMgr.StartCapture(target, m_renderer.GetDevice());
+            m_lastTextureGeneration = m_captureMgr.GetTextureGeneration();
+            m_forceRedraw.store(true);
+        }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(idlePollMs));
+        // Kadans tek yerden (yukaridaki sabit kadans blogu) yonetilir; burada
+        // ek bir bekleme YAPILMAZ. Boylece dongu periyodu sabit kalir ve CPU
+        // yuku dalgalanmaz.
+        (void)presented;
     }
 }
 

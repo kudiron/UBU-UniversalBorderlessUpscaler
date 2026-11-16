@@ -16,6 +16,7 @@
 #include <d3dcompiler.h>
 #include <dwmapi.h>
 #include <shellapi.h>
+#include <mmsystem.h>
 
 #include <iostream>
 #include <string>
@@ -33,6 +34,7 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "winmm.lib")
 
 enum class UpscaleMode : int
 {

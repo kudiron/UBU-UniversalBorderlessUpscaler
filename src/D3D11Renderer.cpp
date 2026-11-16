@@ -2,6 +2,7 @@
 #include "ShaderSources.h"
 #include <fstream>
 #include <sstream>
+#include <cstring>
 
 D3D11Renderer::D3D11Renderer()
 {
@@ -50,6 +51,12 @@ bool D3D11Renderer::Initialize(HWND overlayHwnd, int width, int height)
         return false;
     }
 
+    if (!CreateCursorResources())
+    {
+        Cleanup();
+        return false;
+    }
+
     m_deviceLost = false;
     return true;
 }
@@ -58,6 +65,8 @@ void D3D11Renderer::Cleanup()
 {
     SafeRelease(m_currentSRV);
     m_lastBoundTexture = nullptr;
+
+    ReleaseCursorResources();
 
     SafeRelease(m_linearSampler);
     SafeRelease(m_pointSampler);
@@ -84,6 +93,7 @@ void D3D11Renderer::Cleanup()
 
     // Durumu sifirla (RecoverDevice tutarliligi icin)
     m_allowTearing  = false;
+    m_swapChainFlags = 0;
     m_outputWidth   = 0;
     m_outputHeight  = 0;
     m_hwnd          = nullptr;
@@ -179,6 +189,7 @@ bool D3D11Renderer::CreateDeviceAndSwapChain(HWND overlayHwnd, int width, int he
     if (SUCCEEDED(hr))
     {
         m_allowTearing = true;
+        m_swapChainFlags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
     }
     else
     {
@@ -193,7 +204,11 @@ bool D3D11Renderer::CreateDeviceAndSwapChain(HWND overlayHwnd, int width, int he
             &m_swapChain
         );
 
-        if (FAILED(hr))
+        if (SUCCEEDED(hr))
+        {
+            m_swapChainFlags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+        }
+        else
         {
             // Fallback 2: plain swap chain.
             scDesc.Flags = 0;
@@ -210,6 +225,7 @@ bool D3D11Renderer::CreateDeviceAndSwapChain(HWND overlayHwnd, int width, int he
                 dxgiFactory2->Release();
                 return false;
             }
+            m_swapChainFlags = 0;
         }
     }
 
@@ -250,13 +266,10 @@ bool D3D11Renderer::Resize(int width, int height)
     m_outputWidth = width;
     m_outputHeight = height;
 
-    UINT scFlags = 0;
-    if (m_allowTearing)
-        scFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
-    else if (m_frameLatencyWaitableObject)
-        scFlags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
-
-    HRESULT hr = m_swapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, scFlags);
+    // ResizeBuffers, swapchain'in ILK olusturuldugu bayraklarla birebir cagrilmalidir.
+    // Aksi halde (or. ALLOW_TEARING dusurulur/eklenirse) DXGI E_INVALIDARG dondurur
+    // ve yeniden boyutlandirma (tam ekrana gecis) tamamen basarisiz olur.
+    HRESULT hr = m_swapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, m_swapChainFlags);
 
     if (FAILED(hr))
     {
@@ -421,6 +434,352 @@ bool D3D11Renderer::CreateConstantBuffer()
     return SUCCEEDED(hr);
 }
 
+// -----------------------------------------------------------------------------
+// Gercek Windows sistem ok imlecini (IDC_ARROW) DPI/tema boyutuna uygun
+// sekilde 32-bit premultiplied BGRA piksel dizisine yakalar.
+// Siyah + beyaz arka plana cizim ile anti-aliasing ve golge alfa degerleri
+// birebir kurtarilir.
+// -----------------------------------------------------------------------------
+static bool CaptureSystemArrowCursor(std::vector<uint32_t>& outPixels,
+                                     int& outW, int& outH,
+                                     int& outHotX, int& outHotY)
+{
+    HCURSOR hCur = (HCURSOR)LoadImageW(
+        nullptr, MAKEINTRESOURCEW(32512), IMAGE_CURSOR, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
+    if (!hCur) return false;
+
+    ICONINFO ii = {};
+    if (!GetIconInfo(hCur, &ii)) return false;
+
+    int w = 0, h = 0;
+    BITMAP bm = {};
+    if (ii.hbmColor && GetObjectW(ii.hbmColor, sizeof(bm), &bm))
+    {
+        w = bm.bmWidth;
+        h = std::abs(bm.bmHeight);
+    }
+    else if (ii.hbmMask && GetObjectW(ii.hbmMask, sizeof(bm), &bm))
+    {
+        w = bm.bmWidth;
+        h = std::abs(bm.bmHeight) / 2;
+    }
+
+    const int hotX = (int)ii.xHotspot;
+    const int hotY = (int)ii.yHotspot;
+    if (ii.hbmColor) DeleteObject(ii.hbmColor);
+    if (ii.hbmMask)  DeleteObject(ii.hbmMask);
+
+    if (w <= 0 || h <= 0 || w > 256 || h > 256)
+        return false;
+
+    BITMAPINFO bmi = {};
+    bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth       = w;
+    bmi.bmiHeader.biHeight      = -h;
+    bmi.bmiHeader.biPlanes      = 1;
+    bmi.bmiHeader.biBitCount    = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    HDC hdcScreen = GetDC(nullptr);
+    HDC dcBlack   = CreateCompatibleDC(hdcScreen);
+    HDC dcWhite   = CreateCompatibleDC(hdcScreen);
+
+    void* bitsBlack = nullptr;
+    void* bitsWhite = nullptr;
+    HBITMAP bmpBlack = CreateDIBSection(dcBlack, &bmi, DIB_RGB_COLORS, &bitsBlack, nullptr, 0);
+    HBITMAP bmpWhite = CreateDIBSection(dcWhite, &bmi, DIB_RGB_COLORS, &bitsWhite, nullptr, 0);
+
+    bool ok = false;
+    if (dcBlack && dcWhite && bmpBlack && bmpWhite && bitsBlack && bitsWhite)
+    {
+        HGDIOBJ oldB = SelectObject(dcBlack, bmpBlack);
+        HGDIOBJ oldW = SelectObject(dcWhite, bmpWhite);
+
+        const size_t count = (size_t)w * (size_t)h;
+        uint32_t* pxB = (uint32_t*)bitsBlack;
+        uint32_t* pxW = (uint32_t*)bitsWhite;
+        for (size_t i = 0; i < count; ++i)
+        {
+            pxB[i] = 0x00000000u;
+            pxW[i] = 0x00FFFFFFu;
+        }
+
+        const BOOL d1 = DrawIconEx(dcBlack, 0, 0, hCur, w, h, 0, nullptr, DI_NORMAL);
+        const BOOL d2 = DrawIconEx(dcWhite, 0, 0, hCur, w, h, 0, nullptr, DI_NORMAL);
+        GdiFlush();
+
+        if (d1 && d2)
+        {
+            outPixels.resize(count);
+            bool anyOpaque = false;
+            for (size_t i = 0; i < count; ++i)
+            {
+                const uint32_t bPx = pxB[i];
+                const uint32_t wPx = pxW[i];
+                const int bB = (int)(bPx & 0xFFu);
+                const int bG = (int)((bPx >> 8) & 0xFFu);
+                const int bR = (int)((bPx >> 16) & 0xFFu);
+                const int wB = (int)(wPx & 0xFFu);
+                const int wG = (int)((wPx >> 8) & 0xFFu);
+                const int wR = (int)((wPx >> 16) & 0xFFu);
+
+                const int diff = ((wB - bB) + (wG - bG) + (wR - bR) + 1) / 3;
+                const int invA = std::clamp(diff, 0, 255);
+                const int a    = 255 - invA;
+                if (a == 0)
+                {
+                    outPixels[i] = 0u;
+                }
+                else
+                {
+                    anyOpaque = true;
+                    const uint32_t r = (uint32_t)std::clamp(bR, 0, a);
+                    const uint32_t g = (uint32_t)std::clamp(bG, 0, a);
+                    const uint32_t b = (uint32_t)std::clamp(bB, 0, a);
+                    outPixels[i] = ((uint32_t)a << 24) | (r << 16) | (g << 8) | b;
+                }
+            }
+            if (anyOpaque)
+            {
+                outW = w;
+                outH = h;
+                outHotX = std::clamp(hotX, 0, w - 1);
+                outHotY = std::clamp(hotY, 0, h - 1);
+                ok = true;
+            }
+        }
+
+        SelectObject(dcBlack, oldB);
+        SelectObject(dcWhite, oldW);
+    }
+
+    if (bmpBlack) DeleteObject(bmpBlack);
+    if (bmpWhite) DeleteObject(bmpWhite);
+    if (dcBlack)  DeleteDC(dcBlack);
+    if (dcWhite)  DeleteDC(dcWhite);
+    if (hdcScreen) ReleaseDC(nullptr, hdcScreen);
+
+    return ok;
+}
+
+// -----------------------------------------------------------------------------
+// Sentetik fare imleci kaynaklari.
+// Oncelik: gercek Windows sistem ok imleci (birebir gorunum, anti-aliasing,
+// golge ve DPI boyutu). Basarisiz olursa prosedurel klasik ok kullanilir.
+// -----------------------------------------------------------------------------
+bool D3D11Renderer::CreateCursorResources()
+{
+    std::vector<uint32_t> pixels;
+    if (!CaptureSystemArrowCursor(pixels, m_cursorTexW, m_cursorTexH, m_cursorHotX, m_cursorHotY))
+    {
+        m_cursorTexW = 16;
+        m_cursorTexH = 22;
+        m_cursorHotX = 2;
+        m_cursorHotY = 2;
+
+        const int W = m_cursorTexW;
+        const int H = m_cursorTexH;
+
+        static const int P[7][2] = {
+            {  2,  2 }, {  2, 17 }, {  6, 13 }, {  9, 19 },
+            { 11, 18 }, {  8, 12 }, { 13, 12 }
+        };
+        const int N = 7;
+
+        auto Inside = [&](int x, int y) -> bool
+        {
+            bool in = false;
+            for (int i = 0, j = N - 1; i < N; j = i++)
+            {
+                const int xi = P[i][0], yi = P[i][1];
+                const int xj = P[j][0], yj = P[j][1];
+                if (((yi > y) != (yj > y)) &&
+                    (x < (double)(xj - xi) * (double)(y - yi) / (double)(yj - yi) + (double)xi))
+                {
+                    in = !in;
+                }
+            }
+            return in;
+        };
+
+        pixels.assign((size_t)W * H, 0u);
+        for (int y = 0; y < H; ++y)
+        {
+            for (int x = 0; x < W; ++x)
+            {
+                const bool fill = Inside(x, y);
+
+                bool outline = false;
+                if (!fill)
+                {
+                    for (int dy = -1; dy <= 1 && !outline; ++dy)
+                    {
+                        for (int dx = -1; dx <= 1; ++dx)
+                        {
+                            if (Inside(x + dx, y + dy)) { outline = true; break; }
+                        }
+                    }
+                }
+
+                uint32_t px = 0x00000000u;
+                if (fill)          px = 0xFFFFFFFFu;
+                else if (outline)  px = 0xFF000000u;
+                pixels[(size_t)y * W + x] = px;
+            }
+        }
+    }
+
+    const int W = m_cursorTexW;
+    const int H = m_cursorTexH;
+
+    D3D11_TEXTURE2D_DESC td = {};
+    td.Width = (UINT)W;
+    td.Height = (UINT)H;
+    td.MipLevels = 1;
+    td.ArraySize = 1;
+    td.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    td.SampleDesc.Count = 1;
+    td.Usage = D3D11_USAGE_IMMUTABLE;
+    td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    D3D11_SUBRESOURCE_DATA sd = {};
+    sd.pSysMem = pixels.data();
+    sd.SysMemPitch = (UINT)(W * 4);
+
+    if (FAILED(m_device->CreateTexture2D(&td, &sd, &m_cursorTexture))) return false;
+    if (FAILED(m_device->CreateShaderResourceView(m_cursorTexture, nullptr, &m_cursorSRV))) return false;
+
+    D3D11_BUFFER_DESC bd = {};
+    bd.ByteWidth = sizeof(float) * 4 * 6;   // 6 vertex x (x,y,u,v)
+    bd.Usage = D3D11_USAGE_DYNAMIC;
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    if (FAILED(m_device->CreateBuffer(&bd, nullptr, &m_cursorVB))) return false;
+
+    const char* src = ShaderSources::CursorHLSL;
+    const size_t len = strlen(src);
+
+    ID3DBlob* vsBlob = CompileHLSL(src, len, "CursorVS", "vs_5_0");
+    if (!vsBlob) return false;
+
+    HRESULT hr = m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &m_cursorVS);
+    if (SUCCEEDED(hr))
+    {
+        D3D11_INPUT_ELEMENT_DESC elems[] = {
+            { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        };
+        hr = m_device->CreateInputLayout(elems, ARRAYSIZE(elems),
+                                         vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
+                                         &m_cursorInputLayout);
+    }
+    vsBlob->Release();
+    if (FAILED(hr)) return false;
+
+    ID3DBlob* psBlob = CompileHLSL(src, len, "CursorPS", "ps_5_0");
+    if (!psBlob) return false;
+    hr = m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &m_cursorPS);
+    psBlob->Release();
+    if (FAILED(hr)) return false;
+
+    D3D11_BLEND_DESC bld = {};
+    bld.RenderTarget[0].BlendEnable = TRUE;
+    bld.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+    bld.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    bld.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    bld.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    bld.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    bld.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    bld.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    if (FAILED(m_device->CreateBlendState(&bld, &m_alphaBlend))) return false;
+
+    return true;
+}
+
+void D3D11Renderer::ReleaseCursorResources()
+{
+    SafeRelease(m_alphaBlend);
+    SafeRelease(m_cursorInputLayout);
+    SafeRelease(m_cursorPS);
+    SafeRelease(m_cursorVS);
+    SafeRelease(m_cursorVB);
+    SafeRelease(m_cursorSRV);
+    SafeRelease(m_cursorTexture);
+}
+
+void D3D11Renderer::DrawCursor()
+{
+    if (!m_cursorTexture || !m_cursorSRV || !m_cursorVB ||
+        !m_cursorVS || !m_cursorPS || !m_cursorInputLayout)
+        return;
+
+    const float outW = (float)std::max(1, m_outputWidth);
+    const float outH = (float)std::max(1, m_outputHeight);
+
+    // Dokudaki ok ucunun konumu (m_cursorHotX/Y), imlecin gercek noktasina denk gelir.
+    const float x0 = m_cursorX - (float)m_cursorHotX;
+    const float y0 = m_cursorY - (float)m_cursorHotY;
+    const float x1 = x0 + (float)m_cursorTexW;
+    const float y1 = y0 + (float)m_cursorTexH;
+
+    auto ToNDC = [&](float px, float py, float& nx, float& ny)
+    {
+        nx = (px / outW) * 2.0f - 1.0f;
+        ny = 1.0f - (py / outH) * 2.0f;
+    };
+
+    float nx0, ny0, nx1, ny1;
+    ToNDC(x0, y0, nx0, ny0);
+    ToNDC(x1, y1, nx1, ny1);
+
+    struct CursorVertex { float x, y, u, v; };
+    const CursorVertex verts[6] = {
+        { nx0, ny0, 0.0f, 0.0f },
+        { nx1, ny0, 1.0f, 0.0f },
+        { nx0, ny1, 0.0f, 1.0f },
+        { nx1, ny0, 1.0f, 0.0f },
+        { nx1, ny1, 1.0f, 1.0f },
+        { nx0, ny1, 0.0f, 1.0f },
+    };
+
+    D3D11_MAPPED_SUBRESOURCE mapped = {};
+    if (FAILED(m_context->Map(m_cursorVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+        return;
+    memcpy(mapped.pData, verts, sizeof(verts));
+    m_context->Unmap(m_cursorVB, 0);
+
+    // Imlec cizimi icin viewport tam ekran olmalidir (NDC hesabi buna gore).
+    D3D11_VIEWPORT vp = {};
+    vp.TopLeftX = 0.0f;
+    vp.TopLeftY = 0.0f;
+    vp.Width = outW;
+    vp.Height = outH;
+    vp.MinDepth = 0.0f;
+    vp.MaxDepth = 1.0f;
+
+    m_context->RSSetViewports(1, &vp);
+    m_context->OMSetRenderTargets(1, &m_backBufferRTV, nullptr);
+    m_context->IASetInputLayout(m_cursorInputLayout);
+    m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    UINT stride = sizeof(CursorVertex);
+    UINT offset = 0;
+    ID3D11Buffer* vb = m_cursorVB;
+    m_context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+
+    m_context->VSSetShader(m_cursorVS, nullptr, 0);
+    m_context->PSSetShader(m_cursorPS, nullptr, 0);
+    m_context->PSSetShaderResources(0, 1, &m_cursorSRV);
+    m_context->PSSetSamplers(0, 1, &m_pointSampler);
+
+    m_context->OMSetBlendState(m_alphaBlend, nullptr, 0xFFFFFFFFu);
+    m_context->Draw(6, 0);
+    m_context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFFu);
+
+    ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
+    m_context->PSSetShaderResources(0, 1, nullSRV);
+}
+
 bool D3D11Renderer::RenderFrame(ID3D11Texture2D* capturedTexture, int srcWidth, int srcHeight, const float uvMin[2], const float uvMax[2], UpscaleMode mode, float sharpness)
 {
     if (m_deviceLost || !m_swapChain || !m_backBufferRTV || !capturedTexture)
@@ -458,17 +817,23 @@ bool D3D11Renderer::RenderFrame(ID3D11Texture2D* capturedTexture, int srcWidth, 
     float offsetX = 0.0f;
     float offsetY = 0.0f;
 
-    if (targetAspect > outputAspect)
+    // Eger hedef en-boy orani monitor ile uyumluysa (orn. 16:9), offsetX/offsetY 0 kalir.
+    // Float yuvarlama farklari nedeniyle gereksiz ClearRenderTargetView tetiklenmesini onlemek icin
+    // epsilon karsilastirmasi yapilir.
+    if (std::abs(targetAspect - outputAspect) > 0.005f)
     {
-        // Pillarbox
-        drawH = (float)m_outputWidth / targetAspect;
-        offsetY = ((float)m_outputHeight - drawH) * 0.5f;
-    }
-    else
-    {
-        // Letterbox
-        drawW = (float)m_outputHeight * targetAspect;
-        offsetX = ((float)m_outputWidth - drawW) * 0.5f;
+        if (targetAspect > outputAspect)
+        {
+            // Hedef daha genis -> Letterbox (ust ve altta siyah serit)
+            drawH = (float)m_outputWidth / targetAspect;
+            offsetY = ((float)m_outputHeight - drawH) * 0.5f;
+        }
+        else
+        {
+            // Hedef daha dar -> Pillarbox (sag ve solda siyah serit)
+            drawW = (float)m_outputHeight * targetAspect;
+            offsetX = ((float)m_outputWidth - drawW) * 0.5f;
+        }
     }
 
     D3D11_VIEWPORT vp = {};
@@ -581,6 +946,10 @@ bool D3D11Renderer::RenderFrame(ID3D11Texture2D* capturedTexture, int srcWidth, 
 
     ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
     m_context->PSSetShaderResources(0, 1, nullSRV);
+
+    // Olceklenmis goruntunun UZERINE sentetik fare imleci cizilir.
+    if (m_cursorVisible)
+        DrawCursor();
 
     // Zero-wait presentation when tearing is available: SyncInterval 0 +
     // DXGI_PRESENT_ALLOW_TEARING, so UBU is never blocked by the compositor.

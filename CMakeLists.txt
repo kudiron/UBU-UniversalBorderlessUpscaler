@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(UniversalBorderlessUpscaler VERSION 1.0.0 LANGUAGES CXX)
+project(UniversalBorderlessUpscaler VERSION 1.0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -66,6 +66,7 @@ target_link_libraries(UBU PRIVATE
     user32.lib
     gdi32.lib
     shell32.lib
+    winmm.lib
 )
 
 # Post-build: UBU.exe'yi proje kokune kopyala (kolay calistirma icin)

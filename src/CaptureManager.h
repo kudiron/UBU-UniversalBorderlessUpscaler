@@ -11,7 +11,10 @@ public:
     bool StartCapture(HWND targetHwnd, ID3D11Device* d3d11Device);
     void StopCapture();
 
-    ID3D11Texture2D* GetLatestTexture();
+    // allowGrab = false: yeni kare YAKALANMAZ, mevcut doku dondurulur. Sadece
+    // overlay yeniden cizildiginde (or. sentetik imlec hareketi) kullanilir;
+    // boylece gereksiz BitBlt/GPU yuku olusmaz.
+    ID3D11Texture2D* GetLatestTexture(bool allowGrab = true);
 
     bool HasNewFrame() const { return m_frameChanged; }
 
@@ -64,6 +67,7 @@ private:
     unsigned int m_lastFrameHash = 0;
     bool m_forceUpload  = true;
     bool m_frameChanged = false;
+    ULONGLONG m_lastSizeCheckTime = 0;
 
     ID3D11Texture2D* m_captureTexture = nullptr;
     uint32_t m_textureGeneration = 0;  // CreateCaptureResources'ta artar
