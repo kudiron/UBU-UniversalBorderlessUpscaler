@@ -15,10 +15,7 @@
 
 [**⬇ İndir / Download**](../../releases/latest) · [Türkçe](#türkçe) · [English](#english) · [Sorun Bildir / Report a Bug](../../issues)
 
-<!-- Buraya demo GIF'i veya ekran görüntüsü ekleyin (en etkili iyileştirme):
-     Add a demo GIF or screenshot here (the single most effective improvement):
 <img src="before-after.png" alt="UBU kapalı ve açık karşılaştırması" width="900">
--->
 
 </div>
 
