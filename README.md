@@ -2,32 +2,25 @@
 
 # UniversalBorderlessUpscaler (UBU)
 
-### Zayıf PC'ler için hafif, tek dosyalık çerçevesiz tam ekran ve keskinleştirme aracı
-
+**Zayıf PC'ler için hafif, tek dosyalık çerçevesiz tam ekran ve keskinleştirme aracı**
+<br>
 *A lightweight, single-file borderless fullscreen and sharpening tool for low-end PCs*
 
-[![Version](https://img.shields.io/badge/version-1.0.1-blue?style=flat-square)](../../releases)
-[![Status](https://img.shields.io/badge/status-stable-green?style=flat-square)](#bilinen-sorunlar)
+[![Release](https://img.shields.io/github/v/release/kudiron/UBU-UniversalBorderlessUpscaler?style=flat-square)](../../releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows)](#sistem-gereksinimleri)
 [![DirectX](https://img.shields.io/badge/DirectX-11-107C10?style=flat-square)](#sistem-gereksinimleri)
 [![C++](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat-square&logo=cplusplus)](#kaynak-koddan-derleme)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](#katkıda-bulunma)
 
-[**⬇️ İndir / Download**](../../releases/latest) · [Türkçe](#türkçe) · [English](#english) · [Sorun Bildir / Report a Bug](../../issues)
+[**⬇ İndir / Download**](../../releases/latest) · [Türkçe](#türkçe) · [English](#english) · [Sorun Bildir / Report a Bug](../../issues)
 
-<!--
-  Buraya demo GIF'i veya ekran görüntüsü ekleyin (en etkili iyileştirme):
-  Add a demo GIF or screenshot here (the single most effective improvement):
-
-  <img src="docs/demo.gif" alt="UBU demo" width="720">
+<!-- Buraya demo GIF'i veya ekran görüntüsü ekleyin (en etkili iyileştirme):
+     Add a demo GIF or screenshot here (the single most effective improvement):
+<img src="docs/demo.gif" alt="UBU demo" width="720">
 -->
 
 </div>
-
-### Bilinen Sınırlamalar
-
-UBU v1.0.1 kararlı sürümündedir. Bilinen sınırlamalar:
 
 ---
 
@@ -35,8 +28,7 @@ UBU v1.0.1 kararlı sürümündedir. Bilinen sınırlamalar:
 
 ### İçindekiler
 
-- [UBU Nedir?](#ubu-nedir)
-- [Neden UBU?](#neden-ubu)
+- [Genel Bakış](#genel-bakış)
 - [Özellikler](#özellikler)
 - [Hızlı Başlangıç](#hızlı-başlangıç)
 - [Kısayollar ve Keskinleştirme Modları](#kısayollar-ve-keskinleştirme-modları)
@@ -45,7 +37,7 @@ UBU v1.0.1 kararlı sürümündedir. Bilinen sınırlamalar:
 - [Nasıl Çalışır?](#nasıl-çalışır)
 - [Sık Sorulan Sorular](#sık-sorulan-sorular)
 - [Sorun Giderme](#sorun-giderme)
-- [Bilinen Sorunlar](#bilinen-sorunlar)
+- [Bilinen Sınırlamalar](#bilinen-sınırlamalar)
 - [Yol Haritası](#yol-haritası)
 - [Kaynak Koddan Derleme](#kaynak-koddan-derleme)
 - [Mimari](#mimari)
@@ -53,60 +45,47 @@ UBU v1.0.1 kararlı sürümündedir. Bilinen sınırlamalar:
 - [Lisans](#lisans)
 - [Sorumluluk Reddi](#sorumluluk-reddi)
 
-### UBU Nedir?
+### Genel Bakış
 
-**UBU**; oyunları, emülatörleri ve pencereli uygulamaları **gerçek çerçevesiz (borderless) tam ekran** yapar. Görüntüyü GPU üzerinde ölçekleyip keskinleştirir.
+UBU; oyunları, emülatörleri ve pencereli uygulamaları **gerçek çerçevesiz (borderless) tam ekran** yapar. Görüntüyü GPU üzerinde ölçekleyip keskinleştirir.
 
-Tek bir `UBU.exe` dosyasıdır: kurulum gerektirmez, sistem tepsisinde sessizce çalışır.
-
-### Neden UBU?
+Tek bir `UBU.exe` dosyasıdır. Kurulum gerektirmez, sistem tepsisinde sessizce çalışır.
 
 | | |
 |---|---|
-| 🪶 **Hafif** | Tek geçişli, bölmesiz shader ve kirli kare optimizasyonu ile **Intel UHD gibi entegre GPU'ları yormayacak** şekilde tasarlandı. |
-| 📦 **Tek dosya** | ~258 KB. Statik CRT, Visual C++ Redistributable gerekmez. Yönetici yetkisi gerekmez. |
-| ⚡ **Düşük gecikme** | VSync kilidi olmadan, kare hazır olur olmaz ekrana sunar. |
-| 🔓 **Açık kaynak** | MIT lisanslı. İndirmek yerine kendiniz de derleyebilirsiniz. |
-
-<!--
-  İsteğe bağlı: ölçümlerinizi buraya ekleyin. Örnek tablo:
-  Optional: add your measurements here. Example table:
-
-  | Test sistemi | UBU kapalı | UBU açık |
-  |---|---|---|
-  | Intel UHD 620 / GPU kullanımı | %XX | %XX |
--->
+| **Hafif** | Tek geçişli, bölmesiz shader ve kirli kare optimizasyonu ile Intel UHD gibi entegre GPU'ları yormayacak şekilde tasarlandı. |
+| **Tek dosya** | ~258 KB. Statik CRT, Visual C++ Redistributable gerekmez. Yönetici yetkisi gerekmez. |
+| **Düşük gecikme** | VSync kilidi olmadan, kare hazır olur olmaz ekrana sunar. |
+| **Açık kaynak** | MIT lisanslı. İndirmek yerine kendiniz de derleyebilirsiniz. |
 
 ### Özellikler
 
-| | Özellik | Açıklama |
-|---|---|---|
-| 🖥️ | **Gerçek Çerçevesiz Tam Ekran (FPS Dostu)** | `Alt+Shift+Z` ile aktif pencere yakalanır; kare GPU'da monitör boyutuna ölçeklenip tam ekran gösterilir. **Hedef pencerenin boyutu ve stili değiştirilmez** — oyun düşük çözünürlükte (örn. 960x540) kalır ve yüksek FPS'ini korur. |
-| ⚡ | **VSync Kilidi Olmayan Anlık Sunum** | DirectX 11 swapchain, `DXGI_PRESENT_ALLOW_TEARING` + `Present(0, …)` ile sunulur. Tearing desteklenmeyen sistemlerde otomatik olarak güvenli moda düşer. |
-| 🔋 | **Kirli Kare (Dirty Frame) Optimizasyonu** | GPU yalnızca **yeni bir kare üretildiğinde** çalışır. Görüntü sabitse çizim yapılmaz; dizüstü ve Intel UHD sistemlerde güç tüketimi ile ısı azalır. |
-| ✨ | **Tek Geçişli Hafif Keskinleştirme** | Varsayılan mod, donanımsal bilinear filtreleme üzerine yalnızca 5 örnekli, bölmesiz, tek geçişli hafif bir keskinleştirme uygular. |
-| 🖱️ | **Piksel-Hassas Fare Eşlemesi** | Fare konumu, tıklama, sürükleme ve tekerlek hareketleri, tam ekrandaki konumundan hedef pencerenin **istemci alanına (client area)** en-boy oranı korunarak ölçeklenip aktarılır. |
-| 🪟 | **Alt+Tab Güvenliği** | Hedef pencere odaktan çıktığında kaplama gizlenir; pencere stili ve yakalama bozulmaz, geri dönüldüğünde devam eder. |
-| 🔁 | **Art Arda Aç/Kapat Dayanıklılığı** | DirectX cihazı ve swapchain kapatmada yok edilmez, yalnızca pencere gizlenir. Onlarca kez `Alt+Shift+Z` basmak güvenlidir. |
-| 🌐 | **Çift Dilli Arayüz** | Sistem tepsisi menüsü **Türkçe / English** olarak değiştirilebilir. |
+- **Gerçek çerçevesiz tam ekran (FPS dostu).** `Alt+Shift+Z` ile aktif pencere yakalanır; her kare GPU'da monitör boyutuna ölçeklenir. Hedef pencerenin boyutu ve stili değiştirilmez: oyun düşük çözünürlükte (örn. 960×540) çalışmaya devam eder ve yüksek FPS'ini korur.
+- **Tearing destekli sunum.** DirectX 11 swapchain, `DXGI_PRESENT_ALLOW_TEARING` + `Present(0, …)` ile sunulur. Tearing desteklenmeyen sistemlerde otomatik olarak güvenli moda düşer.
+- **Kirli kare (dirty frame) optimizasyonu.** GPU yalnızca yeni bir kare üretildiğinde çalışır. Görüntü sabitse çizim yapılmaz; dizüstü ve Intel UHD sistemlerde güç tüketimi ile ısı azalır.
+- **Tek geçişli hafif keskinleştirme.** Varsayılan mod, donanımsal bilinear filtreleme üzerine 5 örnekli, bölmesiz, tek geçişli bir keskinleştirme uygular.
+- **Piksel-hassas fare eşlemesi.** Fare konumu, tıklama, sürükleme ve tekerlek hareketleri; tam ekrandaki konumdan hedef pencerenin **istemci alanına (client area)** en-boy oranı korunarak (letterbox/pillarbox telafili) ölçeklenip aktarılır.
+- **Alt+Tab güvenliği.** Hedef pencere odaktan çıktığında kaplama gizlenir, geri dönüldüğünde devam eder.
+- **Art arda aç/kapat dayanıklılığı.** DirectX cihazı ve swapchain kapatmada yok edilmez. Onlarca kez `Alt+Shift+Z` basmak güvenlidir.
+- **Çift dilli arayüz.** Sistem tepsisi menüsü Türkçe / English olarak değiştirilebilir.
 
 ### Hızlı Başlangıç
 
 1. [Releases](../../releases/latest) sayfasından `UBU.exe` dosyasını indirin.
 2. Çift tıklayın. Program sistem tepsisinde (sağ alt) sessizce başlar.
 3. Oyunu, emülatörü veya uygulamayı **pencereli modda** açıp ön plana getirin.
-4. `Alt + Shift + Z` tuşlarına basın. Pencere kenarlıksız tam ekran olur.
-5. Tekrar `Alt + Shift + Z` ile pencere orijinal haline döner.
+4. `Alt` + `Shift` + `Z` tuşlarına basın. Pencere kenarlıksız tam ekran olur.
+5. Tekrar basarak normale dönün.
 6. Çıkmak için tepsi simgesine sağ tıklayıp **Çıkış (Güvenli Kapatma)** seçin.
 
 > [!TIP]
-> Sistem tepsisindeki UBU simgesine **sağ tıklayarak** menüye, **çift tıklayarak** kısayol bilgilerine ulaşabilirsiniz.
+> Tepsi simgesine **sağ tıklayarak** menüye, **çift tıklayarak** kısayol bilgilerine ulaşabilirsiniz.
 
 ### Kısayollar ve Keskinleştirme Modları
 
-| Kısayol | Mod | Ne işe yarar? |
+| Kısayol | Mod | Açıklama |
 |---|---|---|
-| `Alt` + `Shift` + `Z` | Tam ekran | Çerçevesiz tam ekranı **aç / kapat** |
+| `Alt` + `Shift` + `Z` | Tam ekran | Çerçevesiz tam ekranı aç / kapat |
 | `Alt` + `Shift` + `1` | **CAS** *(varsayılan)* | Hafif ve dengeli keskinleştirme. Çoğu durum için önerilir. |
 | `Alt` + `Shift` + `2` | **FSR 1.0** | Maksimum kenar netliği (EASU + RCAS). Daha fazla GPU gücü kullanır. |
 | `Alt` + `Shift` + `3` | **Integer** | Retro / 2D oyunlar için keskin pikseller. |
@@ -116,7 +95,7 @@ Tek bir `UBU.exe` dosyasıdır: kurulum gerektirmez, sistem tepsisinde sessizce 
 
 | Bileşen | Gereksinim |
 |---|---|
-| **İşletim Sistemi** | Windows 10 64-bit (1809 veya üzeri önerilir) / Windows 11 |
+| **İşletim sistemi** | Windows 10 64-bit (1809 veya üzeri önerilir) / Windows 11 |
 | **Grafik** | DirectX 11 uyumlu GPU (Intel UHD Graphics dahil), `ps_5_0` desteği yeterlidir |
 | **İşlemci** | Herhangi bir x86-64 işlemci |
 | **Ek** | DirectX 11 çalışma zamanı (Windows ile gelir), `d3dcompiler_47.dll` |
@@ -128,7 +107,7 @@ Kurulum gerekmez. [Releases](../../releases/latest) bölümünden `UBU.exe` dosy
 > [!NOTE]
 > UBU tek kopya (single-instance) olarak çalışır. İkinci kez başlatılırsa uyarı verir ve kapanır.
 
-**Doğrulama:** İndirdiğiniz dosyanın SHA256 değerini Releases sayfasındaki asset satırında görebilirsiniz. PowerShell ile kontrol etmek için:
+**Doğrulama.** İndirdiğiniz dosyanın SHA256 değerini Releases sayfasındaki asset satırında görebilirsiniz. PowerShell ile kontrol etmek için:
 
 ```powershell
 Get-FileHash .\UBU.exe -Algorithm SHA256
@@ -142,8 +121,8 @@ Hedef pencere ──► Yakalama ──► Kirli kare kontrolü ──► GPU ö
                    BitBlt)                                                                  hedefe aktarılır)
 ```
 
-1. Hedef pencere **olduğu gibi bırakılır** (düşük çözünürlükte kalır, FPS kazancı korunur) ve görüntüsü yakalanıp D3D11 dokusuna aktarılır.
-2. Kare bir öncekiyle aynıysa çizim atlanır (GPU boşta kalır).
+1. Hedef pencere **olduğu gibi bırakılır** (düşük çözünürlükte kalır, FPS kazancı korunur). Görüntüsü yakalanıp D3D11 dokusuna aktarılır.
+2. Kare bir öncekiyle aynıysa çizim atlanır, GPU boşta kalır.
 3. Yeni kare, seçilen modla (CAS / FSR 1.0 / Integer / Kapalı) ölçeklenip en-boy oranı korunarak monitöre sunulur.
 4. Tam ekrandaki fare hareketleri, hedef pencerenin istemci alanına ölçeklenerek oyuna iletilir.
 
@@ -152,7 +131,7 @@ Hedef pencere ──► Yakalama ──► Kirli kare kontrolü ──► GPU ö
 <details>
 <summary><b>Antivirüs programım UBU.exe'yi tehdit olarak işaretledi. Güvenli mi?</b></summary>
 
-UBU, başka pencerelerin stilini değiştirir ve görüntülerini yakalar. İmzasız küçük `.exe` dosyaları ve bu tür davranışlar bazı antivirüslerde yanlış alarma (false positive) yol açabilir. Kaynak kodu bu depoda açıktır; güvenmiyorsanız [kendiniz derleyebilirsiniz](#kaynak-koddan-derleme). Ayrıca [SHA256 değerini](#kurulum) doğrulayabilirsiniz.
+UBU, başka pencerelerin görüntüsünü yakalar ve onlara girdi iletir. İmzasız küçük `.exe` dosyaları ve bu tür davranışlar bazı antivirüslerde yanlış alarma (false positive) yol açabilir. Kaynak kodun tamamı bu depoda açıktır; isterseniz [kendiniz derleyebilir](#kaynak-koddan-derleme) ve [SHA256 değerini](#kurulum) doğrulayabilirsiniz.
 
 </details>
 
@@ -164,7 +143,7 @@ UBU, başka pencerelerin stilini değiştirir ve görüntülerini yakalar. İmza
 </details>
 
 <details>
-<summary><b>Oyunum tam ekran modunda, UBU çalışır mı?</b></summary>
+<summary><b>Oyunum özel tam ekran (exclusive fullscreen) modunda, UBU çalışır mı?</b></summary>
 
 Hayır, oyunu **pencereli moda** alın. UBU pencereli uygulamalar için tasarlanmıştır.
 
@@ -183,30 +162,28 @@ Genelde hayır. Yalnızca yönetici olarak çalışan bir oyunu yakalamak istiyo
 |---|---|
 | `Alt+Shift+Z` tepki vermiyor | Aynı kısayolu kullanan başka bir uygulamayı kapatın. UBU açılışta çakışma uyarısı gösterir. |
 | Görüntü gelmiyor / siyah ekran | Programı yönetici olarak çalıştırmayı deneyin (bazı oyunlar `PrintWindow`'u kısıtlar). Tam ekran yerine pencereli mod kullanın. |
-| Fare konumu kayıyor | Oyunu "pencereli" moda alın. Fareyi **Raw Input** ile okuyan bazı oyunlar harici imleç yönlendirmesini yok sayabilir. |
+| Fare konumu kayıyor | Oyunu pencereli moda alın. Fareyi **Raw Input** ile okuyan bazı oyunlar harici imleç yönlendirmesini yok sayabilir. |
 | FPS artmıyor | Oyunda VSync'i kapatın. UBU tarafında VSync zaten devre dışıdır. |
 
 ### Bilinen Sınırlamalar
 
-UBU v1.0.1 kararlı sürümündedir. Bilinen sınırlamalar:
+UBU şu anda **v1.0.1 (kararlı)** sürümündedir.
 
-- **FPS İyileştirmeleri:** 1 ms yüksek çözünürlüklü zamanlayıcı (`timeBeginPeriod`), sparse-grid kirli kare tespiti ve thread önceliği ile FPS dalgalanmaları büyük oranda giderilmiştir.
-- **Fare Eşlemesi:** Tam ekrandaki fare konumu, en-boy oranı korunmuş (letterbox/pillarbox telafili) ölçekleme ile hedef pencerenin istemci alanına birebir eşlenir.
-- **Yakalama yöntemi:** Görüntü `PrintWindow` / `BitBlt` ile yakalanıyor. Bazı oyunlarda (özellikle DirectX/Vulkan ile çizenlerde) siyah ekran görülebilir.
-- **Hile koruması:** Çekirdek düzeyi koruması olan oyunlarda kullanım önerilmez.
+- **Yakalama yöntemi.** Görüntü `PrintWindow` / `BitBlt` ile yakalanır. Bazı oyunlarda (özellikle DirectX/Vulkan ile çizenlerde) siyah ekran görülebilir.
+- **Hile koruması.** Çekirdek düzeyi koruması olan oyunlarda kullanım önerilmez.
 
 Başka bir sorun bulduysanız [Issues](../../issues) bölümünden bildirebilirsiniz.
 
 ### Yol Haritası
 
-Bunlar kesin söz değil, araştırılacak veya katkıya açık fikirlerdir:
+Bunlar kesin söz değil, araştırılacak veya katkıya açık fikirlerdir.
 
-- [ ] FPS kararsızlığının kaynağını bulmak (profil çıkarma)
+- [ ] Kalan FPS kararsızlığının kaynağını bulmak (profil çıkarma)
 - [ ] Daha hızlı yakalama yöntemleri denemek (Windows Graphics Capture, DXGI Desktop Duplication)
 - [ ] Farklı oyun, emülatör ve GPU'larda uyumluluk testleri
-- [ ] Performans ölçümleri (GPU kullanımı, güç tüketimi) ve README'de yayınlanması
+- [ ] Performans ölçümleri (GPU kullanımı, güç tüketimi) ve yayınlanması
 - [ ] GitHub Actions ile otomatik derleme
-- [ ] `winget` / Scoop paketi (kararlı sürümden sonra)
+- [ ] `winget` / Scoop paketi
 
 ### Kaynak Koddan Derleme
 
@@ -246,11 +223,11 @@ src/
     └── MainShaders.hlsl
 ```
 
-**İş parçacığı modeli:** Ana iş parçacığı pencere mesajlarını, kısayolları ve tepsi menüsünü işler. İkinci bir render iş parçacığı yakalama ve çizim yapar. Paylaşılan durum, atomik değişkenler ile `m_toggleMutex`, `m_renderMutex` ve `m_captureMutex` kilitleriyle korunur.
+**İş parçacığı modeli.** Ana iş parçacığı pencere mesajlarını, kısayolları ve tepsi menüsünü işler. İkinci bir render iş parçacığı yakalama ve çizim yapar. Paylaşılan durum, atomik değişkenler ile `m_toggleMutex`, `m_renderMutex` ve `m_captureMutex` kilitleriyle korunur.
 
 ### Katkıda Bulunma
 
-Katkılar çok değerli. Özellikle şu alanlarda yardım arıyoruz:
+Katkılar çok değerlidir. Özellikle şu alanlarda yardım arıyoruz:
 
 - **Performans:** FPS kararsızlığının kaynağını bulmak, profil çıkarmak, daha hızlı bir yakalama yöntemi denemek.
 - **Uyumluluk testleri:** Farklı oyun, emülatör ve GPU'larda deneyip sonuçları paylaşmak.
@@ -259,12 +236,10 @@ Katkılar çok değerli. Özellikle şu alanlarda yardım arıyoruz:
 **Nasıl katkı verirsiniz?**
 
 1. Depoyu fork'layın ve ayrı bir dal (branch) açın.
-2. Değişikliğinizi yapıp [Kaynak Koddan Derleme](#kaynak-koddan-derleme) adımlarıyla test edin.
+2. Değişikliğinizi yapıp [derleme adımlarıyla](#kaynak-koddan-derleme) test edin.
 3. Pull Request açın ve neyi, neden değiştirdiğinizi kısaca yazın.
 
-**Hata bildirirken** lütfen şunları ekleyin: Windows sürümü, GPU modeli, oyun/uygulama adı ve ne olduğunu açıklayan kısa bir tarif.
-
-Test sonucu paylaşmak da bir katkıdır: hangi oyun/GPU'da çalıştığını veya çalışmadığını [Issues](../../issues) üzerinden yazabilirsiniz.
+**Hata bildirirken** lütfen şunları ekleyin: Windows sürümü, GPU modeli, oyun/uygulama adı ve ne olduğunu açıklayan kısa bir tarif. Test sonucu paylaşmak da bir katkıdır: hangi oyun/GPU'da çalıştığını veya çalışmadığını [Issues](../../issues) üzerinden yazabilirsiniz.
 
 ### Lisans
 
@@ -273,7 +248,7 @@ Bu proje **MIT Lisansı** ile lisanslanmıştır. Ayrıntı için [LICENSE](LICE
 ### Sorumluluk Reddi
 
 > [!WARNING]
-> UBU, pencere stillerini geçici olarak değiştirir. Bazı çekirdek düzeyi hile korumaları (EAC, BattlEye, Vanguard vb.) dış pencere müdahalesini şüpheli karşılayabilir. Çok oyunculu oyunlarda kullanmadan önce oyunun kullanım koşullarını kontrol edin. Kullanım sorumluluğu kullanıcıya aittir.
+> UBU, başka uygulamaların pencerelerini yakalar ve onlarla etkileşime girer. Bazı çekirdek düzeyi hile korumaları (EAC, BattlEye, Vanguard vb.) bunu şüpheli karşılayabilir. Çok oyunculu oyunlarda kullanmadan önce oyunun kullanım koşullarını kontrol edin. Kullanım sorumluluğu kullanıcıya aittir.
 
 <div align="right"><a href="#universalborderlessupscaler-ubu">↑ Başa dön</a></div>
 
@@ -283,92 +258,117 @@ Bu proje **MIT Lisansı** ile lisanslanmıştır. Ayrıntı için [LICENSE](LICE
 
 ### Table of Contents
 
-- [What is UBU?](#what-is-ubu)
-- [Why UBU?](#why-ubu)
-- [Features](#features)
+- [Overview](#overview)
+- [Features](#features-1)
 - [Quick Start](#quick-start)
 - [Shortcuts and Sharpening Modes](#shortcuts-and-sharpening-modes)
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [How It Works](#how-it-works)
 - [FAQ](#faq)
-- [Known Issues](#known-issues)
-- [Roadmap](#roadmap)
-- [Build from Source](#build-from-source)
+- [Troubleshooting](#troubleshooting)
+- [Known Limitations](#known-limitations)
+- [Roadmap](#roadmap-1)
+- [Building from Source](#building-from-source)
+- [Architecture](#architecture)
 - [Contributing](#contributing)
-- [License](#license)
+- [License](#license-1)
+- [Disclaimer](#disclaimer)
 
-### What is UBU?
+### Overview
 
-**UBU** turns games, emulators and windowed applications into **true borderless fullscreen**, upscaling and sharpening the image on the GPU.
+UBU turns games, emulators and windowed applications into **true borderless fullscreen**, scaling and sharpening the image on the GPU.
 
-It ships as a single `UBU.exe`: no installation, it lives quietly in the system tray.
-
-### Why UBU?
+It ships as a single `UBU.exe`. No installation is required, and it runs quietly in the system tray.
 
 | | |
 |---|---|
-| 🪶 **Lightweight** | Single-pass, division-free shader and dirty-frame skipping, designed to stay light on **integrated GPUs such as Intel UHD**. |
-| 📦 **Single file** | ~258 KB. Statically linked CRT, no Visual C++ Redistributable, no admin rights. |
-| ⚡ **Low latency** | No VSync lock: frames are presented as soon as they are ready. |
-| 🔓 **Open source** | MIT licensed. Prefer not to trust a binary? Build it yourself. |
+| **Lightweight** | Single-pass, division-free shader and dirty-frame skipping, designed to stay light on integrated GPUs such as Intel UHD. |
+| **Single file** | ~258 KB. Statically linked CRT, no Visual C++ Redistributable, no administrator rights. |
+| **Low latency** | No VSync lock: frames are presented as soon as they are ready. |
+| **Open source** | MIT licensed. Prefer not to trust a binary? Build it yourself. |
 
 ### Features
 
-- 🖥️ **True Borderless Fullscreen**: `Alt+Shift+Z` strips `WS_CAPTION` / `WS_THICKFRAME` and makes the target window a `WS_POPUP` covering the whole monitor. When toggled off, the original style, size and position are restored **exactly**.
-- ⚡ **Zero-VSync Presentation**: the DirectX 11 swapchain uses `DXGI_PRESENT_ALLOW_TEARING` with `Present(0, …)`. Falls back safely on hardware without tearing support.
-- 🔋 **Dirty Frame Optimization**: the GPU only draws when a genuinely new frame is available.
-- ✨ **Single-Pass Lightweight Sharpening**: a 5-tap, division-free default shader on top of hardware bilinear filtering.
-- 🖱️ **Accurate Mouse Mapping**: cursor position, clicks, drags and wheel events are forwarded to the target **client area** with aspect-ratio correction.
-- 🪟 **Alt+Tab Safe**: the overlay hides when the target loses focus; window style and capture state stay intact.
-- 🔁 **Toggle-Spam Resilient**: the D3D device and swapchain are kept alive on toggle-off, so repeated `Alt+Shift+Z` presses are safe.
-- 🌐 **Bilingual UI**: tray menu available in **Turkish / English**.
+- **True borderless fullscreen (FPS-friendly).** `Alt+Shift+Z` captures the active window and scales each frame to the monitor on the GPU. The target window's size and style are not modified, so the game keeps rendering at its low resolution (for example 960×540) and retains its high FPS.
+- **Tearing-capable presentation.** The DirectX 11 swapchain uses `DXGI_PRESENT_ALLOW_TEARING` with `Present(0, …)`, and falls back to a safe mode on systems without tearing support.
+- **Dirty-frame optimization.** The GPU draws only when a new frame is produced. A static image costs nothing, which lowers power draw and heat on laptops and Intel UHD systems.
+- **Lightweight single-pass sharpening.** The default mode applies a 5-tap, division-free sharpen on top of hardware bilinear filtering.
+- **Pixel-accurate mouse mapping.** Cursor position, clicks, drags and wheel events are scaled from the fullscreen overlay to the target window's **client area**, preserving the aspect ratio (letterbox/pillarbox compensated).
+- **Alt+Tab safe.** The overlay hides when the target loses focus and resumes when it returns.
+- **Toggle-spam resilient.** The D3D device and swapchain are kept alive when toggled off, so pressing `Alt+Shift+Z` repeatedly is safe.
+- **Bilingual UI.** The tray menu can be switched between Turkish and English.
 
 ### Quick Start
 
 1. Download `UBU.exe` from the [latest release](../../releases/latest).
-2. Run it. It starts silently in the system tray.
+2. Run it. It starts silently in the system tray (bottom right).
 3. Open your game, emulator or app in **windowed mode** and bring it to the foreground.
-4. Press `Alt + Shift + Z` to go borderless fullscreen.
-5. Press it again to restore the original window.
-6. Right-click the tray icon and choose **Exit** to quit.
+4. Press `Alt` + `Shift` + `Z` to go borderless fullscreen.
+5. Press it again to return to the normal window.
+6. To quit, right-click the tray icon and choose **Exit**.
+
+> [!TIP]
+> Right-click the tray icon for the menu; double-click it to see the shortcut reference.
 
 ### Shortcuts and Sharpening Modes
 
 | Shortcut | Mode | Description |
 |---|---|---|
 | `Alt` + `Shift` + `Z` | Fullscreen | Toggle borderless fullscreen |
-| `Alt` + `Shift` + `1` | **CAS** *(default)* | Light and balanced sharpening. Recommended for most cases. |
-| `Alt` + `Shift` + `2` | **FSR 1.0** | Maximum edge sharpness (EASU + RCAS). Uses more GPU. |
-| `Alt` + `Shift` + `3` | **Integer** | Crisp pixels for retro / 2D games. |
-| `Alt` + `Shift` + `0` | **Off** | Pure hardware bilinear (fastest). |
+| `Alt` + `Shift` + `1` | **CAS** *(default)* | Light, balanced sharpening. Recommended for most cases. |
+| `Alt` + `Shift` + `2` | **FSR 1.0** | Maximum edge clarity (EASU + RCAS). Uses more GPU. |
+| `Alt` + `Shift` + `3` | **Integer** | Crisp pixels for retro and 2D games. |
+| `Alt` + `Shift` + `0` | **Off** | Hardware bilinear filtering only (fastest). |
 
 ### Requirements
 
-- Windows 10 64-bit (1809+) or Windows 11
-- DirectX 11 capable GPU (Intel UHD Graphics included), `ps_5_0` support
-- Any x86-64 CPU
+| Component | Requirement |
+|---|---|
+| **OS** | Windows 10 64-bit (1809 or later recommended) or Windows 11 |
+| **GPU** | DirectX 11 capable GPU (Intel UHD Graphics included) with `ps_5_0` support |
+| **CPU** | Any x86-64 processor |
+| **Runtime** | DirectX 11 runtime (ships with Windows), `d3dcompiler_47.dll` |
 
 ### Installation
 
-No installation needed. Download `UBU.exe` from [Releases](../../releases/latest) and run it from any folder. You can verify the download with the SHA256 shown on the release page:
+No installation is needed. Download `UBU.exe` from [Releases](../../releases/latest) and run it from any folder.
+
+> [!NOTE]
+> UBU runs as a single instance. Launching a second copy shows a warning and exits.
+
+**Verify the download.** The SHA256 hash is listed next to the asset on the release page. To check it in PowerShell:
 
 ```powershell
 Get-FileHash .\UBU.exe -Algorithm SHA256
 ```
+
+### How It Works
+
+```text
+Target window ──► Capture ──► Dirty-frame check ──► GPU scale + sharpen ──► Fullscreen overlay
+ (windowed)     (PrintWindow/   (did the frame       (D3D11, single-pass      (mouse input is
+                  BitBlt)         change?)             shader)                  forwarded back)
+```
+
+1. The target window is left **as is** (it stays at its low resolution, preserving the FPS gain). Its image is captured and uploaded to a D3D11 texture.
+2. If the frame is identical to the previous one, drawing is skipped and the GPU stays idle.
+3. A new frame is scaled with the selected mode (CAS / FSR 1.0 / Integer / Off) and presented to the monitor with the aspect ratio preserved.
+4. Mouse input on the fullscreen overlay is scaled to the target's client area and forwarded to the game.
 
 ### FAQ
 
 <details>
 <summary><b>My antivirus flags UBU.exe. Is it safe?</b></summary>
 
-UBU modifies other windows' styles and captures their content. Small unsigned executables doing this can trigger false positives. The full source is in this repo, so you can [build it yourself](#build-from-source) and verify the SHA256.
+UBU captures the contents of other windows and forwards input to them. Small unsigned executables that do this can trigger false positives. The full source is in this repository, so you can [build it yourself](#building-from-source) and verify the [SHA256 hash](#installation).
 
 </details>
 
 <details>
 <summary><b>Can I use it in multiplayer games?</b></summary>
 
-Not recommended. Kernel-level anti-cheat (EAC, BattlEye, Vanguard) may treat external window manipulation as suspicious. Check the game's terms first.
+Not recommended. Kernel-level anti-cheat systems (EAC, BattlEye, Vanguard) may treat external window interaction as suspicious. Check the game's terms of service first. See the [Disclaimer](#disclaimer).
 
 </details>
 
@@ -379,29 +379,45 @@ No. Switch the game to **windowed mode**; UBU is built for windowed applications
 
 </details>
 
+<details>
+<summary><b>Do I need to run it as administrator?</b></summary>
+
+Usually not. You may need to if the game you want to capture is itself running as administrator.
+
+</details>
+
+### Troubleshooting
+
+| Symptom | Solution |
+|---|---|
+| `Alt+Shift+Z` does nothing | Close any other application that uses the same shortcut. UBU shows a conflict warning on startup. |
+| Black screen / no image | Try running UBU as administrator (some games restrict `PrintWindow`). Use windowed mode instead of fullscreen. |
+| Mouse position drifts | Switch the game to windowed mode. Games that read the mouse via **Raw Input** may ignore external cursor redirection. |
+| FPS does not improve | Disable VSync in the game. VSync is already disabled on UBU's side. |
+
 ### Known Limitations
 
-UBU is currently in v1.0.1 stable release. Known limitations:
+UBU is currently at **v1.0.1 (stable)**.
 
-- **FPS Stability:** High-precision 1ms timer (`timeBeginPeriod`), sparse-grid dirty frame detection, and thread priority optimizations have substantially resolved FPS drops and latency.
-- **Mouse Mapping:** Window frame and DWM non-client shadow padding (8px shift) are now automatically calibrated and compensated for pixel-perfect button clicking.
-- **Capture method:** Frames are captured with `PrintWindow` / `BitBlt`. Some games (especially exclusive DirectX/Vulkan renderers) may show a black screen.
-- **Anti-cheat:** Not recommended for games with kernel-level protection.
+- **Capture method.** Frames are captured with `PrintWindow` / `BitBlt`. Some games, especially DirectX/Vulkan renderers, may show a black screen.
+- **Anti-cheat.** Not recommended for games with kernel-level protection.
 
 Found something else? Please open an [issue](../../issues).
 
 ### Roadmap
 
-Ideas to investigate and open for contributions, not promises:
+These are ideas to investigate and areas open for contribution, not promises.
 
-- [ ] Find the cause of FPS instability (profiling)
+- [ ] Profile and find the source of remaining FPS instability
 - [ ] Try faster capture paths (Windows Graphics Capture, DXGI Desktop Duplication)
 - [ ] Compatibility testing across games, emulators and GPUs
 - [ ] Publish performance measurements (GPU usage, power draw)
 - [ ] Automated builds with GitHub Actions
-- [ ] `winget` / Scoop package (after a stable release)
+- [ ] `winget` / Scoop package
 
-### Build from Source
+### Building from Source
+
+**Requirements:** CMake ≥ 3.20, Visual Studio 2019/2022/2026 (*Desktop development with C++* workload) or MSVC Build Tools, and the Windows 10/11 SDK.
 
 ```bat
 git clone https://github.com/kudiron/UBU-UniversalBorderlessUpscaler.git
@@ -411,26 +427,57 @@ cmake -S . -B build -G "Visual Studio 18 2026" -A x64
 cmake --build build --config Release
 ```
 
-`UBU.exe` is copied to the project root automatically. Requires CMake ≥ 3.20 and Visual Studio / MSVC Build Tools with the Windows 10/11 SDK.
+`UBU.exe` is copied to the project root automatically.
+
+<details>
+<summary>Building with Ninja</summary>
+
+```bat
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
+
+</details>
+
+### Architecture
+
+```text
+src/
+├── Main.cpp            # Entry point, single-instance guard, DPI awareness, custom exception filter
+├── UpscalerApp.*       # Hotkeys, tray icon, start/stop, render loop
+├── OverlayWindow.*     # Fullscreen overlay + aspect-correct mouse input forwarding
+├── CaptureManager.*    # PrintWindow/BitBlt → D3D11 texture, dirty-frame (hash) detection
+├── D3D11Renderer.*     # Swapchain, tearing, shader management, letterbox scaling
+├── ShaderSources.h     # Embedded (fallback) HLSL source
+└── Shaders/
+    └── MainShaders.hlsl
+```
+
+**Threading model.** The main thread handles window messages, hotkeys and the tray menu. A second render thread performs capture and drawing. Shared state is protected by atomics and by the `m_toggleMutex`, `m_renderMutex` and `m_captureMutex` locks.
 
 ### Contributing
 
-Contributions are very welcome. Areas where help is especially appreciated:
+Contributions are very welcome. Help is especially appreciated in these areas:
 
 - **Performance:** finding the cause of FPS instability, profiling, trying a faster capture path.
-- **Compatibility testing:** trying UBU with different games, emulators and GPUs and sharing results.
+- **Compatibility testing:** trying UBU with different games, emulators and GPUs, and sharing the results.
 - **Bug fixes** and general code improvements.
 
 **How to contribute**
 
-1. Fork the repo and create a feature branch.
-2. Make your change and test it using the [Build from Source](#build-from-source) steps.
+1. Fork the repository and create a feature branch.
+2. Make your change and test it using the [build steps](#building-from-source).
 3. Open a Pull Request describing what you changed and why.
 
-**When reporting a bug**, please include your Windows version, GPU model, the game/app name, and a short description of what happened. Sharing a test result (works / doesn't work on game X with GPU Y) is a contribution too.
+**When reporting a bug,** please include your Windows version, GPU model, the game or app name, and a short description of what happened. Sharing a test result (works / doesn't work on game X with GPU Y) is a contribution too.
 
 ### License
 
-Released under the **MIT License**. See [LICENSE](LICENSE).
+Released under the **MIT License**. See [LICENSE](LICENSE) for details.
+
+### Disclaimer
+
+> [!WARNING]
+> UBU captures and interacts with other applications' windows. Some kernel-level anti-cheat systems (EAC, BattlEye, Vanguard, etc.) may treat this as suspicious. Check the game's terms of service before using UBU in multiplayer games. Use at your own risk.
 
 <div align="right"><a href="#universalborderlessupscaler-ubu">↑ Back to top</a></div>
