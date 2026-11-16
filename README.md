@@ -6,7 +6,7 @@
 <br>
 *A lightweight, single-file borderless fullscreen and sharpening tool for low-end PCs*
 
-[![Release](https://img.shields.io/github/v/release/kudiron/UBU-UniversalBorderlessUpscaler?style=flat-square)](../../releases/latest)
+[![Release](https://img.shields.io/github/v/release/kudiron/UBU-UniversalBorderlessUpscaler?style=flat-square&label=version)](../../releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows)](#sistem-gereksinimleri)
 [![DirectX](https://img.shields.io/badge/DirectX-11-107C10?style=flat-square)](#sistem-gereksinimleri)
