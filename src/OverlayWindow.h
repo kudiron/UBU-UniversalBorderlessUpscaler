@@ -106,7 +106,14 @@ private:
     // Yalnizca UI thread erisir: SetCursorPos kaynakli sentetik WM_MOUSEMOVE
     // tekrarlarinin hedef pencereye spamlanmasini onler.
     POINT  m_lastForwardedPos = { -1, -1 };
+    int    m_lastForwardedTargetClientX = -1;
+    int    m_lastForwardedTargetClientY = -1;
     HANDLE m_wakeEvent = nullptr;
+
+    // --- Onbellekleme (Caching) ---
+    mutable HWND  m_cachedTargetHwnd = nullptr;
+    mutable RECT  m_cachedTargetClientRect = {};
+    mutable ULONGLONG m_cachedClientTick = 0;
 
     // Overlay aktifken isletim sistemi imlecini gorunmez yapan bos imlec.
     HCURSOR m_blankCursor = nullptr;

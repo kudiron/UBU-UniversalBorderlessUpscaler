@@ -94,6 +94,7 @@ void OverlayWindow::Destroy()
 {
     if (m_hwnd)
     {
+        ReleaseCapture();
         DestroyWindow(m_hwnd);
         m_hwnd = nullptr;
     }
@@ -114,6 +115,11 @@ void OverlayWindow::Destroy()
         m_haveParked    = false;
     }
     m_lastForwardedPos = { -1, -1 };
+    m_lastForwardedTargetClientX = -1;
+    m_lastForwardedTargetClientY = -1;
+    m_cachedTargetHwnd = nullptr;
+    m_cachedTargetClientRect = {};
+    m_cachedClientTick = 0;
 }
 
 void OverlayWindow::Show(bool visible)
@@ -233,7 +239,7 @@ LRESULT OverlayWindow::HandleMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         if (UpdateCursor() && m_wakeEvent)
             SetEvent(m_wakeEvent);
         ForwardMouseToTarget(msg, wParam);
-        if ((wParam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON)) == 0)
+        if ((wParam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON | MK_XBUTTON1 | MK_XBUTTON2)) == 0)
             ReleaseCapture();
         return 0;
 
@@ -404,7 +410,21 @@ bool OverlayWindow::MapClientToTargetClient(int clientX, int clientY, int& outX,
     if (!target || target == m_hwnd || !IsWindow(target)) return false;
 
     RECT rcClient = {};
-    if (!GetClientRect(target, &rcClient)) return false;
+    ULONGLONG now = GetTickCount64();
+    // Önbellekleme (Caching): Her WM_MOUSEMOVE olayında GetClientRect çağrısını
+    // tekrar tekrar yapmamak için önbellekte tutuyoruz (pencere aynıysa ve 50ms geçmemişse veya hızlı kontrol).
+    // Ayrıca tıklama anında veya boyut değişiminde güncellenir.
+    if (m_cachedTargetHwnd == target && (now - m_cachedClientTick < 50))
+    {
+        rcClient = m_cachedTargetClientRect;
+    }
+    else
+    {
+        if (!GetClientRect(target, &rcClient)) return false;
+        m_cachedTargetHwnd = target;
+        m_cachedTargetClientRect = rcClient;
+        m_cachedClientTick = now;
+    }
     const int srcW = rcClient.right - rcClient.left;
     const int srcH = rcClient.bottom - rcClient.top;
     if (srcW <= 0 || srcH <= 0) return false;
@@ -491,6 +511,21 @@ bool OverlayWindow::ForwardMouseToTarget(UINT msg, WPARAM wParam)
         return false;
 
     LPARAM outParam;
+    // 1. WM_MOUSEMOVE Coalescing / Tekrar Önleme:
+    // Aynı hedef (targetClientX, targetClientY) koordinatına arka arkaya gereksiz
+    // PostMessage(WM_MOUSEMOVE) göndermeyi engelle (yalnızca koordinat gerçekten değiştiyse mesaj gönder).
+    if (msg == WM_MOUSEMOVE)
+    {
+        if (cx == m_lastForwardedTargetClientX && cy == m_lastForwardedTargetClientY)
+            return false;
+        m_lastForwardedTargetClientX = cx;
+        m_lastForwardedTargetClientY = cy;
+    }
+    else if (msg >= WM_LBUTTONDOWN && msg <= WM_XBUTTONDBLCLK)
+    {
+        // Tıklama anında hedef client cache'ini tazele (önbellek güncellemeleri için)
+        m_cachedClientTick = 0;
+    }
     if (msg == WM_MOUSEWHEEL || msg == WM_MOUSEHWHEEL)
     {
         // KRITIK: Tekerlek mesajlarinda lParam ISTEMCI degil EKRAN koordinatidir
