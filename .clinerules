@@ -1,4 +1,0 @@
-﻿# UBU - Kesin Koruma Kurallari
-1. `src/OverlayWindow.cpp` ve `src/OverlayWindow.h` icindeki calisan fare tiklama ve buton yonlendirme kodlarina ASLA dokunma.
-2. `SetCursorPos`, `SendInput`, `WH_MOUSE_LL`, `ShowCursor(FALSE)` ve Windows Graphics Capture (WGC) kullanma.
-3. Derleme her zaman `cmake --build build --config Release` ile Visual Studio 18 uzerinde yapilmalidir.
