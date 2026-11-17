@@ -270,7 +270,8 @@ Bu proje **MIT Lisansı** ile lisanslanmıştır. Ayrıntı için [LICENSE](LICE
 ### Table of Contents
 
 - [Overview](#overview)
-- [Features](#features-1)
+- [Features](#features)
+- [v1.0.2 — Bug Fixes and Stability Improvements](#v102--bug-fixes-and-stability-improvements)
 - [Quick Start](#quick-start)
 - [Shortcuts and Sharpening Modes](#shortcuts-and-sharpening-modes)
 - [Requirements](#requirements)
@@ -279,11 +280,11 @@ Bu proje **MIT Lisansı** ile lisanslanmıştır. Ayrıntı için [LICENSE](LICE
 - [FAQ](#faq)
 - [Troubleshooting](#troubleshooting)
 - [Known Limitations](#known-limitations)
-- [Roadmap](#roadmap-1)
+- [Roadmap](#roadmap)
 - [Building from Source](#building-from-source)
 - [Architecture](#architecture)
 - [Contributing](#contributing)
-- [License](#license-1)
+- [License](#license)
 - [Disclaimer](#disclaimer)
 
 ### Overview
