@@ -17,7 +17,7 @@
 
 [**⬇ İndir / Download**](../../releases/latest) · [Türkçe](#türkçe) · [English](#english) · [Sorun Bildir / Report a Bug](../../issues)
 
-<img src="before-after.png" alt="UBU kapalı ve açık karşılaştırması" width="900">
+<img src="before-after.png?v=2" alt="UBU kapalı ve açık karşılaştırması" width="900">
 
 </div>
 
