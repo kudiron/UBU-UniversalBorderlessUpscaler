@@ -3,6 +3,8 @@
 # UniversalBorderlessUpscaler (UBU)
 
 **Zayıf PC'ler için hafif, tek dosyalık çerçevesiz tam ekran ve keskinleştirme aracı**
+
+**Current documented release: `v1.0.2`**
 <br>
 *A lightweight, single-file borderless fullscreen and sharpening tool for low-end PCs*
 
@@ -62,9 +64,20 @@ Tek bir `UBU.exe` dosyasıdır. Kurulum gerektirmez, sistem tepsisinde sessizce 
 - **Kirli kare (dirty frame) optimizasyonu.** GPU yalnızca yeni bir kare üretildiğinde çalışır. Görüntü sabitse çizim yapılmaz; dizüstü ve Intel UHD sistemlerde güç tüketimi ile ısı azalır.
 - **Tek geçişli hafif keskinleştirme.** Varsayılan mod, donanımsal bilinear filtreleme üzerine 5 örnekli, bölmesiz, tek geçişli bir keskinleştirme uygular.
 - **Piksel-hassas fare eşlemesi.** Fare konumu, tıklama, sürükleme ve tekerlek hareketleri; tam ekrandaki konumdan hedef pencerenin **istemci alanına (client area)** en-boy oranı korunarak (letterbox/pillarbox telafili) ölçeklenip aktarılır.
-- **Alt+Tab güvenliği.** Hedef pencere odaktan çıktığında kaplama gizlenir, geri dönüldüğünde devam eder.
+- **Odak ve küçültme güvenliği.** Hedef pencere odaktan çıktığında veya simge durumuna küçültüldüğünde kaplama gizlenir; pencere geri geldiğinde yakalama motoru yeniden başlatılmadan devam eder.
 - **Art arda aç/kapat dayanıklılığı.** DirectX cihazı ve swapchain kapatmada yok edilmez. Onlarca kez `Alt+Shift+Z` basmak güvenlidir.
 - **Çift dilli arayüz.** Sistem tepsisi menüsü Türkçe / English olarak değiştirilebilir.
+
+### v1.0.2 — Hata Düzeltmeleri ve Kararlılık
+
+UBU v1.0.2, ölçeklenmiş tam ekran modunda fare etkileşimini düzeltmeye ve pencere davranışı ile kare zamanlamasını daha kararlı hâle getirmeye odaklanan bir hata düzeltme güncellemesidir.
+
+- **Fare koordinatlarının doğru eşleştirilmesi:** `Alt+Shift+Z` ile ölçeklenmiş tam ekran etkinleştirildiğinde imleç konumu hedef oyun penceresinin koordinatlarıyla doğru şekilde eşleştirilir.
+- **Buton tıklamalarının doğru iletilmesi:** Oyun içi menü ve arayüz tıklamaları doğrudan hedef pencereye yönlendirilir; imlecin beklenmedik konumlara sıçraması önlenir.
+- **Küçültülen pencerede otomatik uyku:** Hedef pencere `IsIconic` ile simge durumunda algılandığında overlay gizlenir ve gereksiz CPU/GPU işlemleri durdurulur.
+- **Hızlı geri yükleme:** Hedef pencere yeniden öne getirildiğinde yakalama motoru baştan oluşturulmadan overlay önceki konumuna ve ölçeğine geri döner.
+- **Odak kararlılığı:** Ölçeklenmiş tam ekran overlay'ine tıklandığında oyunun odağını kaybederek arka plana düşmesi engellenir.
+- **Daha kararlı kare zamanlaması:** Yakalama ve DirectX 11 çizim döngüleri arasındaki senkronizasyon iyileştirilerek mikro takılmaların (micro-stutter) azaltılması hedeflenmiştir.
 
 ### Hızlı Başlangıç
 
@@ -164,7 +177,7 @@ Genelde hayır. Yalnızca yönetici olarak çalışan bir oyunu yakalamak istiyo
 
 ### Bilinen Sınırlamalar
 
-UBU şu anda **v1.0.1 (kararlı)** sürümündedir.
+UBU şu anda **v1.0.2 (kararlı)** sürümündedir.
 
 - **Yakalama yöntemi.** Görüntü `PrintWindow` / `BitBlt` ile yakalanır. Bazı oyunlarda (özellikle DirectX/Vulkan ile çizenlerde) siyah ekran görülebilir.
 - **Hile koruması.** Çekirdek düzeyi koruması olan oyunlarda kullanım önerilmez.
@@ -293,9 +306,20 @@ It ships as a single `UBU.exe`. No installation is required, and it runs quietly
 - **Dirty-frame optimization.** The GPU draws only when a new frame is produced. A static image costs nothing, which lowers power draw and heat on laptops and Intel UHD systems.
 - **Lightweight single-pass sharpening.** The default mode applies a 5-tap, division-free sharpen on top of hardware bilinear filtering.
 - **Pixel-accurate mouse mapping.** Cursor position, clicks, drags and wheel events are scaled from the fullscreen overlay to the target window's **client area**, preserving the aspect ratio (letterbox/pillarbox compensated).
-- **Alt+Tab safe.** The overlay hides when the target loses focus and resumes when it returns.
+- **Focus and minimize handling.** The overlay hides when the target loses focus or is minimized, then resumes without restarting the capture engine.
 - **Toggle-spam resilient.** The D3D device and swapchain are kept alive when toggled off, so pressing `Alt+Shift+Z` repeatedly is safe.
 - **Bilingual UI.** The tray menu can be switched between Turkish and English.
+
+### v1.0.2 — Bug Fixes and Stability Improvements
+
+UBU v1.0.2 is a bug-fix release focused on correcting mouse interaction in scaled fullscreen mode and improving window behavior and frame pacing.
+
+- **Accurate mouse coordinate mapping:** When scaled fullscreen is enabled with `Alt+Shift+Z`, cursor coordinates are correctly mapped to the target game window.
+- **Reliable button clicks:** Click messages from in-game menus and interfaces are forwarded directly to the target window, preventing unexpected cursor jumps.
+- **Automatic idle behavior for minimized windows:** When the target window is detected as minimized through `IsIconic`, the overlay is hidden and unnecessary CPU/GPU work is suspended.
+- **Fast restore:** When the target window returns to the foreground, the overlay restores its previous position and scale without rebuilding the capture engine from scratch.
+- **Focus stability:** Clicking the scaled fullscreen overlay no longer causes the game to lose focus and fall into the background.
+- **Improved frame pacing:** Synchronization between the capture and DirectX 11 rendering loops has been improved to reduce micro-stutter.
 
 ### Quick Start
 
@@ -395,7 +419,7 @@ Usually not. You may need to if the game you want to capture is itself running a
 
 ### Known Limitations
 
-UBU is currently at **v1.0.1 (stable)**.
+UBU is currently at **v1.0.2 (stable)**.
 
 - **Capture method.** Frames are captured with `PrintWindow` / `BitBlt`. Some games, especially DirectX/Vulkan renderers, may show a black screen.
 - **Anti-cheat.** Not recommended for games with kernel-level protection.
