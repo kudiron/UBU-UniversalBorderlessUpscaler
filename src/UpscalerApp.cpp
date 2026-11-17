@@ -555,6 +555,15 @@ void UpscalerApp::RenderLoop()
             if (stopped) PlayFeedbackSound(2);
             continue;
         }
+        // Hedef pencere simge durumuna küçültüldüyse (IsIconic) overlay otomatik gizlenir,
+        // yakalama döngüsü beklemeye alınarak CPU/GPU is yükü sıfırlanır.
+        if (IsIconic(target))
+        {
+            m_overlayWindow.Show(false);
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            continue;
+        }
+
 
         // Hedef pencere odakta degilse (Alt+Tab ile baska uygulamaya gecildi)
         // overlay gizlenir ama yakalama/stil DEGISTIRILMEZ: geri donuste aninda
